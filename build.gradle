@@ -1,0 +1,37 @@
+apply plugin: org.haxe.gradle.HaxePlugin
+
+model
+{
+	haxe
+	{
+		binFolder = "bin"
+		flavorDimensions = ["target", "env"]
+		flavors
+		{
+			js
+			{
+				dimension "target"
+				//cp "/Users/johann.martinache/Desktop/massive/sony-latam/src"
+				cp "src"
+			}
+			
+			debug
+			{
+				dimension "env"
+			}
+
+			release
+			{
+				dimension "env"
+			}
+		}
+
+		dependencies
+		{
+			haxe
+			{
+				haxelib("name", "version")
+			}
+		}
+	}
+}
