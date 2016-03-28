@@ -1,36 +1,72 @@
-apply plugin: org.haxe.gradle.HaxePlugin
+apply plugin: HaxePlugin;
 
 model
 {
 	haxe
 	{
-		binFolder = "bin"
-		flavorDimensions = ["target", "env"]
-		flavors
+		binFolder = "bin";
+
+		platforms
 		{
-			js
+			all
 			{
-				dimension "target"
-				//cp "/Users/johann.martinache/Desktop/massive/sony-latam/src"
-				cp "src"
-			}
-			
-			debug
-			{
-				dimension "env"
+				dimensions += ["platform", "environement", "mode"]
+
+				flavors
+				{
+					all
+					{
+						cp += ["src"]
+						main "Main"
+						macro += "toto"
+					}
+
+					test(HaxeFlavor)
+					{
+						dimension "environement"
+						flag += "test"
+					}
+
+					staging(HaxeFlavor)
+					{
+						dimension "environement"
+						flag += "staging"
+					}
+
+					live(HaxeFlavor)
+					{
+						dimension "environement"
+						flag += "live"
+					}
+
+					debug(HaxeFlavor)
+					{
+						dimension "mode"
+						debug true;
+					}
+
+					release(HaxeFlavor)
+					{
+						dimension "mode"
+						debug false;
+					}
+				}
 			}
 
-			release
+			js(HaxePlatform)
 			{
-				dimension "env"
+				flavors
+				{
+					all
+					{
+						fileName = "index.js"		
+					}
+				}
 			}
-		}
 
-		dependencies
-		{
-			haxe
+			cpp(HaxePlatform)
 			{
-				haxelib("name", "version")
+				
 			}
 		}
 	}
