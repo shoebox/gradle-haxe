@@ -18,7 +18,8 @@ model
 					{
 						cp += ["src"]
 						main "Main"
-						macro += "toto"
+						flag += "toto"
+						macro += "totomacro"
 					}
 
 					test(HaxeFlavor)
@@ -59,7 +60,7 @@ model
 				{
 					all
 					{
-						fileName = "index.js"		
+						binaryFileName = "index.js"		
 					}
 				}
 			}

@@ -9,7 +9,7 @@ import org.gradle.platform.base.*;
 class HaxePlugin extends RuleSource
 {
 	@Mutate 
-	void createCompileTasks(ModelMap<Task> tasks, Haxe haxe)
+	void createCompileTasks(ModelMap<Task> tasks, HaxeModel haxe)
 	{
 		for (p in haxe.platforms)
 		{
@@ -52,24 +52,32 @@ class HaxePlugin extends RuleSource
 				tasks.create(name, HaxeCompileTask.class)
 				{
 					task ->
-					task.flavors = comboClone;
-					task.haxe = haxe;
-					task.platform = platformClone;
-					task.outputDirectory = project.file(task.outputPath);
+						
+					HaxeFlavorVariant variant = HaxeFlavorVariant.create(project, 
+						haxe, 
+						platformClone, 
+						comboClone, 
+						name);
+
+					
+					task.variant = variant;
+					task.outputDirectory = variant.output;
+					for (cp in variant.cp)
+						task.source(cp);
 				}
 			}
 		}
 	}
 
 	@Model
-	void haxe(Haxe haxe) {}
+	void haxe(HaxeModel haxe) {}
 	
 	@Model
 	void platforms(@Path("haxe.platforms") HaxePlatform p) {}
 }
 
 @Managed 
-interface Haxe extends HaxePlatform
+interface HaxeModel extends HaxePlatform
 {
 	void setBinFolder(String folder);
 	String getBinFolder();
@@ -94,28 +102,3 @@ interface HaxeLib
 	String getVersion();
 }
 
-@Managed
-interface HaxeFlavor extends Named
-{
-	void setCp(List<String> list);
-	List<String> getCp();
-
-	void setFlag(List<String> flags);
-	List<String> getFlag();
-
-	@Nullable
-	void setDebug(Boolean debug);
-	Boolean getDebug();
-
-	void setMain(String main);
-	String getMain();
-
-	void setFileName(String name);
-	String getFileName();
-
-	void setDimension(String dimension);
-	String getDimension();
-
-	void setMacro(List<String> macro);
-	List<String> getMacro();
-}

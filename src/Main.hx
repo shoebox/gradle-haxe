@@ -5,7 +5,6 @@ class Main
 	public function new()
 	{
 		trace("constructor");
-		trace("toto");
 	}
 
 	public static function main()
