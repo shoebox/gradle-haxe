@@ -31,8 +31,6 @@ public class HaxeCompileTask extends SourceTask
 	@TaskAction
 	public void generate()
 	{
-		println "generate : " + source;
-
 		List<String> args = [
 			"-${variant.platformName}", outputDirectory.path + "/" + variant.binaryFileName,
 			"-main", variant.main,
