@@ -1,17 +1,47 @@
-import org.gradle.api.tasks.Exec
+import org.gradle.process.internal.ExecHandleBuilder;
+import org.gradle.process.internal.ExecHandle;
+import org.gradle.process.ExecResult;
+import org.gradle.process.internal.ExecHandleListener;
 
 import java.io.ByteArrayOutputStream;
 
-class HaxeExec extends Exec
+class HaxeExec extends ExecHandleBuilder implements ExecHandleListener
 {
 	public HaxeExec()
 	{
-		setExecutable("haxe");
-		standardOutput = new ByteArrayOutputStream()
+		super();
+		executable = "haxe";
+		setWorkingDir(new File(".").getAbsolutePath());
+		errorOutput = new ByteArrayOutputStream();
 	}
 
-	@Override public void exec()
+	public void setArguments(List<String> args)
 	{
-		super.exec();
+		this.args = args;
+	}
+
+	public List<String> getAllArguments()
+	{
+		return args;
+	}
+
+	@Override
+	public ExecHandle build()
+	{
+		ExecHandle handler = super.build();
+		handler.addListener(this);
+		return handler;
+	}	
+
+	@Override
+	void executionStarted(ExecHandle execHandle)
+	{
+		println "executionStarted : " + execHandle;
+	}
+
+	@Override
+	void executionFinished(ExecHandle execHandle, ExecResult execResult)
+	{
+		println "execResult : " + execResult;
 	}
 }

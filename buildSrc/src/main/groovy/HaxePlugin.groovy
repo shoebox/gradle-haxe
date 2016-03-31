@@ -1,7 +1,7 @@
 import groovy.util.GroovyCollections;
-import org.gradle.api.*;
 import org.gradle.internal.HasInternalProtocol;
 import org.gradle.internal.reflect.Instantiator
+import org.gradle.api.*;
 import org.gradle.language.base.*;
 import org.gradle.model.*;
 import org.gradle.platform.base.*;
@@ -53,20 +53,72 @@ class HaxePlugin extends RuleSource
 				{
 					task ->
 						
-					HaxeFlavorVariant variant = HaxeFlavorVariant.create(project, 
+					HaxeFlavorVariant variant = createVariant(project, 
 						haxe, 
 						platformClone, 
 						comboClone, 
 						name);
 
-					
-					task.variant = variant;
-					task.outputDirectory = variant.output;
+					String debugMode = variant.debug ? "debug" : "release";
+					File file = project.file(haxe.binFolder + "/$debugMode/$name/");
+					task.flags = variant.flag;
+					task.debug = variant.debug;
+					task.platformName = variant.platformName;
+					task.binaryFileName = variant.binaryFileName;
+					task.main = variant.main;
+					task.outputDirectory = file;
+
 					for (cp in variant.cp)
 						task.source(cp);
 				}
 			}
 		}
+	}
+
+	public static HaxeFlavorVariant createVariant(Project project,
+		HaxeModel model, 
+		HaxePlatform platform, 
+		List<HaxeFlavor> flavors,
+		String variantName)
+	{
+		HaxeFlavorVariant result = new HaxeFlavorVariant();
+		result.name = variantName;
+		List f = flavors.collect{it};
+
+		// Cp
+		result.cp = [];
+		for (value in f.collect{it.cp}.flatten().unique())
+			result.cp.add(new File(value));
+
+		// D flags
+		result.flag = f.collect{it.flag}.flatten().unique();
+		result.flag.removeAll([null]);
+
+		// Macros
+		result.macro = f.collect{it.macro}.flatten().unique();
+
+		// 
+		result.debug = f.collect{it.debug}.max();
+
+		// 
+		result.binaryFileName = f.collect{it.binaryFileName}.max();
+
+		//
+		result.platformName = platform.name;
+		result.main = f.collect{it.main}.max();
+
+		
+		/*
+		result.output = project.file(model.binFolder + "/$debugMode/$variantName/");
+		println result.cp;
+		println result.flag;
+		println result.macro;
+		println result.debug;
+		println result.main;
+		println result.output;
+		*/
+
+		return result;
 	}
 
 	@Model

@@ -17,6 +17,7 @@ model
 					all
 					{
 						cp += ["src"]
+						// cp += ["src", "/Users/johann.martinache/Desktop/massive/sony-latam/src/"]
 						main "Main"
 						flag += "toto"
 						macro += "totomacro"

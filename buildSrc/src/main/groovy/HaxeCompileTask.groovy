@@ -6,10 +6,14 @@ import HaxeExec;
 
 public class HaxeCompileTask extends SourceTask
 {
-	@Input HaxeFlavorVariant variant;
-
 	@OutputDirectory
 	File outputDirectory;
+
+	@Input Boolean debug;
+	@Input String binaryFileName;
+	@Input String main;
+	@Input String platformName;
+	@Input List<String> flags;
 	
 	public HaxeCompileTask()
 	{
@@ -17,26 +21,28 @@ public class HaxeCompileTask extends SourceTask
 		this.include("**/*.hx");
 	}
 
-	@Input
-	void setVariant(HaxeFlavorVariant value)
-	{
-		this.variant = value;
-	}
-
-	@Input setOuputDirectory(File outputDirectory)
-	{
-		this.outputDirectory = outputDirectory;
-	}
-
 	@TaskAction
-	public void generate()
-	{
-		List<String> args = [
-			"-${variant.platformName}", outputDirectory.path + "/" + variant.binaryFileName,
-			"-main", variant.main,
+    public void run()
+    {
+    	HaxeExec task = prepareExec();
+    	try
+    	{
+        	task.build().start().waitForFinish().assertNormalExitValue();
+        }
+        catch (Exception e)
+        {
+        	println task.errorOutput
+        }
+    }
+
+    HaxeExec prepareExec()
+    {
+    	List<String> args = [
+			"-${platformName}", outputDirectory.path + "/" + binaryFileName,
+			"-main", main,
 		];
 
-		if (variant.debug)
+		if (debug)
 			args.add("-debug");
 		
 		// Cp
@@ -45,14 +51,17 @@ public class HaxeCompileTask extends SourceTask
 			it ->
 			args.addAll(["-cp", it]);
 		};
-		
-		println args;
-		// Run
-		FileCollection s = this.source;
-		HaxeExec execTask = project.tasks.create("CompileHaxe", HaxeExec)
+
+		// Flags
+		flags.unique().each
 		{
-			setArgs(args);
-		}
-		execTask.exec();
-	}
+			it ->
+			args.addAll(["-D", it]);
+		};
+		println args;
+		
+    	HaxeExec exec = new HaxeExec();
+		exec.arguments = args;
+    	return exec;
+    }
 }
