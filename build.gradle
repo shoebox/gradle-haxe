@@ -1,75 +1,131 @@
+import org.shoebox.haxe.HaxePlugin;
+import org.shoebox.haxe.HaxeFlavor;
+import org.shoebox.haxe.HaxeSourceSet;
+
 apply plugin: HaxePlugin;
+
+buildDir = 'bin/'
 
 model
 {
 	haxe
 	{
-		binFolder = "bin";
+		dimensions = ["platform", "device", "environement", "mode"]
+		res = "res";
 
-		platforms
+		flavors
 		{
 			all
 			{
-				dimensions += ["platform", "environement", "mode"]
-
-				flavors
-				{
-					all
-					{
-						cp += ["src"]
-						// cp += ["src", "/Users/johann.martinache/Desktop/massive/sony-latam/src/"]
-						main "Main"
-						flag += "toto"
-						macro += "totomacro"
-					}
-
-					test(HaxeFlavor)
-					{
-						dimension "environement"
-						flag += "test"
-					}
-
-					staging(HaxeFlavor)
-					{
-						dimension "environement"
-						flag += "staging"
-					}
-
-					live(HaxeFlavor)
-					{
-						dimension "environement"
-						flag += "live"
-					}
-
-					debug(HaxeFlavor)
-					{
-						dimension "mode"
-						debug true;
-					}
-
-					release(HaxeFlavor)
-					{
-						dimension "mode"
-						debug false;
-					}
-				}
+				set ->
+				set.main = "Main";
 			}
 
-			js(HaxePlatform)
+			js(HaxeFlavor)
 			{
-				flavors
+				dimension "platform"
+				platform "js"
+				sources
 				{
-					all
+					haxe(HaxeSourceSet)
 					{
-						binaryFileName = "index.js"		
+						source
+						{
+							srcDir "src"
+						}
 					}
 				}
+
+				resource = 
+				[
+					"target/app/target/locale/en/title.json@string-en",
+					"target/app/target/locale/pt/title.json@string-pt"
+				];
+
+				haxelib = 
+				[
+					"lib1",
+					"lib2"
+				];
+
+				flag = ["flag-js"]
 			}
 
-			cpp(HaxePlatform)
+			debug(HaxeFlavor)
 			{
-				
+				dimension "mode"
+				debug true;
+				flag = ["flag-debug"]
+			}
+
+			mobile(HaxeFlavor)
+			{
+				dimension "device"
+				outputFileName "index.mobile.js"
+				flag = ["mobile"]
+			}
+
+			tablet(HaxeFlavor)
+			{
+				dimension "device"
+				outputFileName "index.tablet.js"
+				flag = ["tablet"]
+			}
+
+			release(HaxeFlavor)
+			{
+				dimension "mode"
+				debug false;
+				flag = ["flag-release"]
 			}
 		}
+
+		/*
+		
+
+
+		flavors
+		{
+			all
+			{
+				cp += ["src", "/Users/johann.martinache/Desktop/massive/sony-latam/src/"]
+				main = "Main"
+				flag += "toto"
+				macro += "totomacro"
+			}
+
+			debug(HaxeFlavor)
+			{
+				main = "Main-debug"
+				dimension "mode"
+				debug true;
+			}
+
+			release(HaxeFlavor)
+			{
+				main = "Main-releaase"
+
+				dimension "mode"
+				debug false;
+			}
+		}
+		}
+
+		js(HaxePlatform)
+		{
+			flavors
+			{
+				all
+				{
+					binaryFileName = "index.js"		
+				}
+			}
+		}
+
+		cpp(HaxePlatform)
+		{
+			
+		}
+		*/
 	}
 }

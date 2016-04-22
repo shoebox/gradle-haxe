@@ -1,3 +1,5 @@
+package org.shoebox.haxe;
+
 import org.gradle.process.internal.ExecHandleBuilder;
 import org.gradle.process.internal.ExecHandle;
 import org.gradle.process.ExecResult;
@@ -36,12 +38,13 @@ class HaxeExec extends ExecHandleBuilder implements ExecHandleListener
 	@Override
 	void executionStarted(ExecHandle execHandle)
 	{
-		println "executionStarted : " + execHandle;
+		
 	}
 
 	@Override
 	void executionFinished(ExecHandle execHandle, ExecResult execResult)
 	{
-		println "execResult : " + execResult;
+		if (execResult.exitValue != 0 && standardOutput != null)
+			println "standardOutput : " + standardOutput.toString();
 	}
 }
