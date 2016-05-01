@@ -1,10 +1,30 @@
+buildscript
+{
+	repositories
+	{
+		flatDir
+		{
+			dirs 'plugin-haxe/'
+		}
+	}
+	dependencies
+	{
+		classpath group: 'org.shoebox', name: 'plugin-haxe', version: '0.1.0'
+	}
+}
+
 import org.shoebox.haxe.HaxePlugin;
 import org.shoebox.haxe.HaxeFlavor;
 import org.shoebox.haxe.HaxeSourceSet;
 
-apply plugin: HaxePlugin;
+apply plugin: 'org.shoebox.haxe'
 
 buildDir = 'bin/'
+
+project.ext
+{
+	overrideOutput = null;
+}
 
 model
 {
@@ -38,17 +58,30 @@ model
 
 				resource = 
 				[
-					"target/app/target/locale/en/title.json@string-en",
-					"target/app/target/locale/pt/title.json@string-pt"
+					
 				];
 
 				haxelib = 
 				[
-					"lib1",
-					"lib2"
+					
 				];
 
 				flag = ["flag-js"]
+			}
+
+			test(HaxeFlavor)
+			{
+				dimension "environement"
+			}
+
+			staging(HaxeFlavor)
+			{
+				dimension "environement"
+			}
+
+			live(HaxeFlavor)
+			{
+				dimension "environement"
 			}
 
 			debug(HaxeFlavor)
@@ -79,53 +112,5 @@ model
 				flag = ["flag-release"]
 			}
 		}
-
-		/*
-		
-
-
-		flavors
-		{
-			all
-			{
-				cp += ["src", "/Users/johann.martinache/Desktop/massive/sony-latam/src/"]
-				main = "Main"
-				flag += "toto"
-				macro += "totomacro"
-			}
-
-			debug(HaxeFlavor)
-			{
-				main = "Main-debug"
-				dimension "mode"
-				debug true;
-			}
-
-			release(HaxeFlavor)
-			{
-				main = "Main-releaase"
-
-				dimension "mode"
-				debug false;
-			}
-		}
-		}
-
-		js(HaxePlatform)
-		{
-			flavors
-			{
-				all
-				{
-					binaryFileName = "index.js"		
-				}
-			}
-		}
-
-		cpp(HaxePlatform)
-		{
-			
-		}
-		*/
 	}
 }

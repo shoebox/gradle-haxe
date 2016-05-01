@@ -7,7 +7,7 @@ import org.gradle.process.internal.ExecHandleListener;
 
 import java.io.ByteArrayOutputStream;
 
-class HaxeExec extends ExecHandleBuilder implements ExecHandleListener
+class HaxeExec extends ExecHandleBuilder
 {
 	public HaxeExec()
 	{
@@ -25,26 +25,5 @@ class HaxeExec extends ExecHandleBuilder implements ExecHandleListener
 	public List<String> getAllArguments()
 	{
 		return args;
-	}
-
-	@Override
-	public ExecHandle build()
-	{
-		ExecHandle handler = super.build();
-		handler.addListener(this);
-		return handler;
-	}	
-
-	@Override
-	void executionStarted(ExecHandle execHandle)
-	{
-		
-	}
-
-	@Override
-	void executionFinished(ExecHandle execHandle, ExecResult execResult)
-	{
-		if (execResult.exitValue != 0 && standardOutput != null)
-			println "standardOutput : " + standardOutput.toString();
 	}
 }
