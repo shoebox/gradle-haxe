@@ -13,6 +13,7 @@ buildscript
 	}
 }
 
+
 import org.shoebox.haxe.HaxePlugin;
 import org.shoebox.haxe.HaxeFlavor;
 import org.shoebox.haxe.HaxeSourceSet;
@@ -30,6 +31,8 @@ model
 {
 	haxe
 	{
+		version = "3.1.3"
+
 		dimensions = ["platform", "device", "environement", "mode"]
 		res = "res";
 
@@ -49,24 +52,14 @@ model
 				{
 					haxe(HaxeSourceSet)
 					{
-						source
-						{
-							srcDir "src"
-						}
+						source.srcDir "src"
 					}
 				}
 
-				resource = 
-				[
-					
-				];
-
-				haxelib = 
-				[
-					
-				];
-
+				compilerFlag = []
 				flag = ["flag-js"]
+				haxelib = [];
+				resource = [];
 			}
 
 			test(HaxeFlavor)

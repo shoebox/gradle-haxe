@@ -7,6 +7,10 @@ import org.gradle.model.*;
 import org.shoebox.haxe.HaxeResourceTask;
 import org.gradle.model.internal.core.UnmanagedStruct;
 import org.apache.log4j.LogManager;
+import java.math.BigInteger;
+import java.security.MessageDigest
+import org.codehaus.groovy.util.HashCodeHelper;
+import groovy.json.*;
 
 class HaxePlugin implements Plugin<Project>
 {
@@ -68,6 +72,20 @@ class HaxePluginRuleSource extends RuleSource
 			}
 		}
 
+		String checkVersionTaskName = "CheckHaxeVersion";
+		HaxeCheckVersion checkVersion = tasks.create(checkVersionTaskName,
+			HaxeCheckVersion.class,
+			new Action<HaxeCheckVersion>()
+			{
+				@Override
+				public void execute(HaxeCheckVersion t)
+				{
+					t.requiredVersion = model.version;
+					t.outputDir = t.project.file(".haxe/");
+				}
+			}
+		);
+
 		GroovyCollections.combinations(groups).each
 		{
 			combo ->
@@ -122,16 +140,18 @@ class HaxePluginRuleSource extends RuleSource
 					@Override
 					public void execute(HaxeCompileTask t)
 					{
-						File output = new File(t.project.buildDir, comboName);
+						File output = new File(t.project.buildDir, 
+							(variant.debug ? "debug/" : "release/") + comboName);
 						t.setGroup("Haxe");
-						t.dependsOn syncName;
+						t.dependsOn = [checkVersionTaskName, syncName];
 						t.components = components;
 						t.outputDirectory = output;
 						t.source = t.project.files(variant.src);
 						t.variant = variant;
 						if (variant.outputFileName != null)
 						{
-							t.output = new File(t.outputDirectory, comboName + variant.outputFileName);
+							t.output = new File(t.outputDirectory,
+								comboName + variant.outputFileName);
 						}
 					}
 				}
@@ -143,7 +163,8 @@ class HaxePluginRuleSource extends RuleSource
 					@Override
 					public void execute(HaxeResourceTask t)
 					{
-						File output = new File(t.project.buildDir, comboName);
+						File output = new File(t.project.buildDir, 
+							(variant.debug ? "debug/" : "release/") + comboName);
 						t.components = components;
 						t.outputDirectory = output;
 						t.resDirectory = model.res;
@@ -162,6 +183,9 @@ interface HaxeModel
 
 	File getRes()
 	void setRes(File value);
+
+	String getVersion();
+	void setVersion(String value);
 
 	ModelMap<HaxeFlavor> getFlavors();
 }
