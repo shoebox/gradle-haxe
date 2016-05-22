@@ -1,5 +1,4 @@
 apply plugin: 'groovy'
-apply plugin: 'java-gradle-plugin'
 
 dependencies
 {
@@ -9,3 +8,9 @@ dependencies
 
 group = 'org.shoebox'
 version = '0.1.0'
+
+tasks.create(name: 'compileJar', type: Copy, dependsOn:'jar') {
+    from(file('build/libs/'))
+    into(".")
+    include('**/*.jar')
+}

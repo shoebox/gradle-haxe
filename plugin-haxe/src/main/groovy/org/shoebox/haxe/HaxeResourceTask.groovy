@@ -4,7 +4,6 @@ import org.gradle.api.*;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.*;
 
-@ParallelizableTask
 public class HaxeResourceTask extends DefaultTask
 {
 	@Input

@@ -3,3 +3,4 @@ build/
 reports/
 .gradletasknamecache
 bin/
+.haxe/
