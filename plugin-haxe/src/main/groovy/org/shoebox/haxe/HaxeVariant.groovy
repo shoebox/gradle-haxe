@@ -10,6 +10,7 @@ public class HaxeVariant implements Serializable
 	Boolean debug;
 	Boolean verbose;
 	File output = null;
+	List<String> components;
 	List<File> src = [];
 	List<String> resource = [];
 	List<String> compilerFlag = [];
@@ -21,4 +22,20 @@ public class HaxeVariant implements Serializable
 	String outputFileName;
 	String platform;
 	String target;
+
+	public final String getResourceTaskName()
+	{
+		return "res" + platform.capitalize() + name.capitalize();
+	}
+
+	public final File getOutputPath(File buildDir)
+	{
+		String path = (debug ? "debug/" : "release/") + name;
+		return new File(buildDir, path);
+	}
+
+	public final String getCompileTaskName()
+	{
+		return "haxe" + name.capitalize();
+	}
 }

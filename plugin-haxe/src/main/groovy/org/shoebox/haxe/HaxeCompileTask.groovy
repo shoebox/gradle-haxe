@@ -11,9 +11,6 @@ import org.gradle.api.tasks.ParallelizableTask;
 @ParallelizableTask
 public class HaxeCompileTask extends SourceTask
 {
-	@Input
-	List<String> components;
-
 	@Optional
 	@OutputFile
 	File output;
