@@ -4,6 +4,7 @@ import org.gradle.api.*;
 import org.gradle.model.*;
 
 import java.io.Serializable;
+import java.security.MessageDigest;
 
 public class HaxeVariant implements Serializable
 {
@@ -37,5 +38,40 @@ public class HaxeVariant implements Serializable
 	public final String getCompileTaskName()
 	{
 		return "haxe" + name.capitalize();
+	}
+
+	String md5(String s)
+	{
+	    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+	}
+
+	public String hash()
+	{
+		String result = "";
+		["debug", "verbose"].each
+		{
+			it ->
+			if (this."$it" != null)
+			{
+				result += this."$it";
+			}
+		}
+
+		["components", "src", "resource", "compilerFlag", "flag", "haxelib", 
+			"macro"].each
+		{
+			it ->
+			if (this."$it" != null)
+				result += this."$it".toListString();
+		}
+
+		["main","name","outputFileName","platform","target"].each
+		{
+			it ->
+			if (this."$it" != null)
+				result += this."$it";
+		}
+
+		return md5(result);
 	}
 }

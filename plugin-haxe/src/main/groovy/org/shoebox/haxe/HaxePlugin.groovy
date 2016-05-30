@@ -131,6 +131,7 @@ class HaxePluginRuleSource extends RuleSource
 				@Override
 				public void execute(HaxeCompileTask t)
 				{
+					t.configurationHash = variant.hash();
 					t.setGroup("Haxe");
 					t.dependsOn = [CheckVersionTaskName, variant.getResourceTaskName()];
 					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
@@ -195,14 +196,13 @@ class HaxePluginRuleSource extends RuleSource
 					groups.push(list);
 				}
 			}
-			
+
 			GroovyCollections.combinations(groups).each
 			{
 				combo ->
 				final HaxeVariant variant = createVariantFromCombo(combo);
 				variant.name = combo.collect { it.name.capitalize() }.join();
 				variant.components = combo.collect{it.name};
-
 				validateVariant(variant);
 				createCompileTask(variant, tasks);
 				createResourceTask(tasks, variant, model.res);

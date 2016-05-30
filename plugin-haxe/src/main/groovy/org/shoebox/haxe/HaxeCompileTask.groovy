@@ -19,6 +19,9 @@ public class HaxeCompileTask extends SourceTask
 	@OutputDirectory
 	File outputDirectory;
 
+	@Input
+	String configurationHash;
+
 	HaxeVariant variant;
 	
 	public HaxeCompileTask()
