@@ -158,6 +158,9 @@ class HaxePluginRuleSource extends RuleSource
 				@Override
 				public void execute(HaxeResourceTask t)
 				{
+					t.configurationHash = variant.hash();
+					t.variant = variant;
+					t.name = variant.getResourceTaskName();
 					t.components = variant.components;
 					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
 					t.resDirectory = resDirectory;

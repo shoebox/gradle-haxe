@@ -9,13 +9,17 @@ public class HaxeResourceTask extends DefaultTask
 	@Input
 	List<String> components;
 
-	@InputDirectory
-	File resDirectory;
+	@Input
+	String configurationHash;
 
 	@OutputDirectory
 	File outputDirectory;
 
+	@InputDirectory
+	File resDirectory;
+
 	FileCollection files;
+	HaxeVariant variant;
 
 	public HaxeResourceTask()
 	{
@@ -33,6 +37,7 @@ public class HaxeResourceTask extends DefaultTask
 	{
 		List<String> combos = ["all"];
 		combos.addAll(components);
+		combos.addAll(variant.flag);
 
 		List<List<String>> temp = [components];
 		components.each

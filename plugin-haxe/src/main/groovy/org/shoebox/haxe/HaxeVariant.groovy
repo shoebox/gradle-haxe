@@ -26,7 +26,7 @@ public class HaxeVariant implements Serializable
 
 	public final String getResourceTaskName()
 	{
-		return "res" + platform.capitalize() + name.capitalize();
+		return "haxeRes" + name.capitalize();
 	}
 
 	public final File getOutputPath(File buildDir)
