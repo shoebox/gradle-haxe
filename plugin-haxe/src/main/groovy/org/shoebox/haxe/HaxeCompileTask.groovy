@@ -48,23 +48,22 @@ public class HaxeCompileTask extends SourceTask
 
 	HaxeExec prepareExec()
 	{
-		List<String> args = ["-" + variant.platform, 
-			new File(outputDirectory, variant.outputFileName)];
+		File output = new File(outputDirectory, variant.outputFileName);
+		List<String> args = ["-" + variant.platform, output];
 
 		args.addAll(["-main", variant.main]);
-		variant.src.each{ args.addAll(["-cp", it.absolutePath]) };
+		variant.src.unique().each{ args.addAll(["-cp", it.absolutePath]) };
 		variant.resource.each{ args.addAll(["-resource", it]); }
 		variant.macro.each{ args.addAll(["--macro", it]); }
 		variant.haxelib.each{ args.addAll(["-lib", it]); }
+		variant.flag.each{ args.addAll(["-D", it]); }
+		variant.compilerFlag.each{ args.push(it); }
+
 		if (variant.debug)
 			args.push("-debug");
 		
 		if (variant.verbose)
 			args.push("-v");
-		
-		variant.src.each{ args.addAll(["-cp", it.absolutePath]) };
-		variant.flag.each{ args.addAll(["-D", it]); }
-		variant.compilerFlag.each{ args.push(it); }
 
 		HaxeExec exec = new HaxeExec();
 		exec.arguments = args;

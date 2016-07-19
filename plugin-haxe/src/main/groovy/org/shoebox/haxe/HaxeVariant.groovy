@@ -2,6 +2,7 @@ package org.shoebox.haxe;
 
 import org.gradle.api.*;
 import org.gradle.model.*;
+import org.shoebox.haxe.HaxeDefaultConfig;
 
 import java.io.Serializable;
 import java.security.MessageDigest;
@@ -11,18 +12,41 @@ public class HaxeVariant implements Serializable
 	Boolean debug;
 	Boolean verbose;
 	File output = null;
-	List<String> components;
+	List<BuildType> buildTypes;
 	List<File> src = [];
-	List<String> resource = [];
 	List<String> compilerFlag = [];
+	List<String> components;
 	List<String> flag = [];
 	List<String> haxelib = [];
 	List<String> macro = [];
+	List<String> resource = [];
 	String main;
 	String name;
 	String outputFileName;
 	String platform;
 	String target;
+
+	public HaxeVariant(HaxeDefaultConfig value)
+	{
+		if (value != null)
+		{
+			copyProperties(value, this);
+		}
+	}
+
+	void copyProperties(source, target)
+	{
+		source.properties.each
+		{
+			key, value ->
+			if (value != null 
+				&& target.hasProperty(key) 
+				&& !(key in ['class', 'metaClass'])) 
+			{
+				target[key] = value
+			}
+		}
+	}
 
 	public final String getResourceTaskName()
 	{
@@ -42,7 +66,7 @@ public class HaxeVariant implements Serializable
 
 	String md5(String s)
 	{
-	    MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
+		MessageDigest.getInstance("MD5").digest(s.bytes).encodeHex().toString()
 	}
 
 	public String hash()

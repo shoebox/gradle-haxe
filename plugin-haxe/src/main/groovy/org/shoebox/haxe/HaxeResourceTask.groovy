@@ -3,6 +3,7 @@ package org.shoebox.haxe;
 import org.gradle.api.*;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.*;
+import org.shoebox.haxe.BuildType;
 
 public class HaxeResourceTask extends DefaultTask
 {
@@ -16,6 +17,7 @@ public class HaxeResourceTask extends DefaultTask
 	File outputDirectory;
 
 	@InputDirectory
+	@Optional
 	File resDirectory;
 
 	FileCollection files;
@@ -29,8 +31,11 @@ public class HaxeResourceTask extends DefaultTask
 	@TaskAction
 	public void haxeResouceAction()
 	{
-		generateFiles();
-		copyFiles();
+		if (resDirectory != null)
+		{
+			generateFiles();
+			copyFiles();
+		}
 	}
 
 	void generateFiles()

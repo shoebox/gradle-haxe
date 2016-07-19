@@ -44,9 +44,21 @@ class HaxePluginRuleSource extends RuleSource
 	}
 
 	@Validate
+	void validateDefaultConfigSourceSet(@Path("haxe.defaultConfig")
+		HaxeDefaultConfig defaultConfig)
+	{
+		validateSourceSet(defaultConfig.sources);
+	}
+
+	@Validate
 	void validateFlavorSourceSet(@Each HaxeFlavor flavor)
 	{
-		flavor.sources.values().each
+		validateSourceSet(flavor.sources);
+	}
+
+	private void validateSourceSet(FunctionalSourceSet sourceSet)
+	{
+		sourceSet.values().each
 		{
 			it ->
 			it.source.srcDirs.each
@@ -57,7 +69,7 @@ class HaxePluginRuleSource extends RuleSource
 					throw new RuntimeException("Source path : ${file} on flavor:${flavor} is invalid");
 				}
 			}
-		}		
+		}	
 	}
 
 	private void copyDefault(Object from, Object to)
@@ -82,29 +94,36 @@ class HaxePluginRuleSource extends RuleSource
 
 	private void mergeSourceSet(Object from, Object to)
 	{
-		from.sources.values().each
+		if (from != null)
 		{
-			it ->
-			to.src += it.source.getSrcDirs();
-		};
+			from.sources.values().each
+			{
+				it ->
+				to.src += it.source.getSrcDirs();
+			};
+		}
 	}
 
-	private HaxeVariant createVariantFromFlavor(HaxeFlavor flavor)
+	private HaxeVariant createVariantFromFlavor(HaxeDefaultConfig defaultConfig,
+		HaxeFlavor flavor)
 	{
-		HaxeVariant variant = new HaxeVariant();
+		HaxeVariant variant = new HaxeVariant(defaultConfig);
 		copyDefault(flavor, variant);
 		mergeSourceSet(flavor, variant);
+		mergeSourceSet(defaultConfig, variant);
 		return variant;
 	}
 
-	private HaxeVariant createVariantFromCombo(ArrayList combo)
+	private HaxeVariant createVariantFromCombo(HaxeDefaultConfig defaultConfig, 
+		ArrayList combo)
 	{
-		HaxeVariant variant = new HaxeVariant();
+		HaxeVariant variant = new HaxeVariant(defaultConfig);
 		combo.each
 		{
 			flavor ->
 			copyDefault(flavor, variant);
 			mergeSourceSet(flavor, variant);
+			mergeSourceSet(defaultConfig, variant);
 		}
 
 		return variant;
@@ -135,7 +154,7 @@ class HaxePluginRuleSource extends RuleSource
 					t.setGroup("Haxe");
 					t.dependsOn = [CheckVersionTaskName, variant.getResourceTaskName()];
 					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
-					t.source = t.project.files(variant.src);
+					t.source = t.project.files(variant.src.unique(false));
 					t.variant = variant;
 					if (variant.outputFileName != null)
 					{
@@ -172,7 +191,8 @@ class HaxePluginRuleSource extends RuleSource
 	@Mutate 
 	void createCompileTasks(final ModelMap<Task> tasks, 
 		final HaxeModel model,
-		final @Path("haxe.dimensions") List<String> dimensions)
+		final @Path("haxe.dimensions") List<String> dimensions,
+		final @Path("haxe.defaultConfig") HaxeDefaultConfig defaultConfig)
 	{
 		HaxeCheckVersion checkVersion = tasks.create(CheckVersionTaskName,
 			HaxeCheckVersion.class,
@@ -203,10 +223,11 @@ class HaxePluginRuleSource extends RuleSource
 			GroovyCollections.combinations(groups).each
 			{
 				combo ->
-				final HaxeVariant variant = createVariantFromCombo(combo);
+				final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
 				variant.name = combo.collect { it.name.capitalize() }.join();
 				variant.components = combo.collect{it.name};
 				validateVariant(variant);
+
 				createCompileTask(variant, tasks);
 				createResourceTask(tasks, variant, model.res);
 			}
@@ -216,11 +237,11 @@ class HaxePluginRuleSource extends RuleSource
 			model.flavors.each
 			{
 				it ->
-				HaxeVariant variant = createVariantFromFlavor(it);
+				HaxeVariant variant = createVariantFromFlavor(defaultConfig, it);
 				variant.name = it.name;
 				variant.components = [it.name];
-
 				validateVariant(variant);
+
 				createCompileTask(variant, tasks);
 				createResourceTask(tasks, variant, model.res);
 			}	
@@ -240,26 +261,53 @@ interface HaxeModel
 	String getVersion();
 	void setVersion(String value);
 
+	HaxeDefaultConfig getDefaultConfig();
+
 	ModelMap<HaxeFlavor> getFlavors();
 }
 
 @Managed
-interface HaxeFlavor extends Named, HaxeCompilerParameters
+interface HaxeFlavor extends Named, HaxeCompilerParameters, HaxePlatformParameters
 {
 	String getDimension();
 	void setDimension(String value);
 
-	String getPlatform();
-	void setPlatform(String value);
-
-	void setOutput(File value);
-	File getOutput();
-
-	FunctionalSourceSet getSources();
+	ModelMap<HaxeOutput> getOutputs();
 }
 
 @Managed
 interface HaxeSourceSet extends LanguageSourceSet
 {
 
+}
+
+@Managed
+interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters
+{
+
+}
+
+@Managed
+interface HaxeOutput extends HaxeCompilerParameters, HaxeOutputParameters
+{
+
+}
+
+@Managed
+interface HaxeOutputParameters
+{
+	String getFileName();
+	void setFileName(String value);
+}
+
+@Managed
+interface HaxePlatformParameters
+{
+	String getPlatform();
+	void setPlatform(String value);
+
+	FunctionalSourceSet getSources();
+
+	void setOutput(File value);
+	File getOutput();
 }
