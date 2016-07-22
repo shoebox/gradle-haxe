@@ -2,7 +2,7 @@ package org.shoebox.haxe;
 
 import org.gradle.api.*;
 import org.gradle.model.*;
-import org.shoebox.haxe.HaxeDefaultConfig;
+import org.shoebox.haxe.*;
 
 import java.io.Serializable;
 import java.security.MessageDigest;
@@ -12,7 +12,6 @@ public class HaxeVariant implements Serializable
 	Boolean debug;
 	Boolean verbose;
 	File output = null;
-	List<BuildType> buildTypes;
 	List<File> src = [];
 	List<String> compilerFlag = [];
 	List<String> components;
@@ -20,8 +19,10 @@ public class HaxeVariant implements Serializable
 	List<String> haxelib = [];
 	List<String> macro = [];
 	List<String> resource = [];
+	String group;
 	String main;
 	String name;
+	String outputDirectoryName;
 	String outputFileName;
 	String platform;
 	String target;
@@ -30,21 +31,7 @@ public class HaxeVariant implements Serializable
 	{
 		if (value != null)
 		{
-			copyProperties(value, this);
-		}
-	}
-
-	void copyProperties(source, target)
-	{
-		source.properties.each
-		{
-			key, value ->
-			if (value != null 
-				&& target.hasProperty(key) 
-				&& !(key in ['class', 'metaClass'])) 
-			{
-				target[key] = value
-			}
+			Util.copyProperties(value, this);
 		}
 	}
 
@@ -55,7 +42,8 @@ public class HaxeVariant implements Serializable
 
 	public final File getOutputPath(File buildDir)
 	{
-		String path = (debug ? "debug/" : "release/") + name;
+		String folderName = outputDirectoryName == null ? name : outputDirectoryName;
+		String path = (debug ? "debug/" : "release/") + folderName;
 		return new File(buildDir, path);
 	}
 

@@ -3,7 +3,6 @@ package org.shoebox.haxe;
 import org.gradle.api.*;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.tasks.*;
-import org.shoebox.haxe.BuildType;
 
 public class HaxeResourceTask extends DefaultTask
 {

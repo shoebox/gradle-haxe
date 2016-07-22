@@ -17,7 +17,7 @@ dependencies
 }
 
 group = 'org.shoebox'
-version = '0.1.0'
+version = '0.2.0'
 
 tasks.create(name: 'compileJar', type: Copy, dependsOn:'jar') {
 	from(file('build/libs/'))

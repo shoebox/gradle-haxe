@@ -72,26 +72,6 @@ class HaxePluginRuleSource extends RuleSource
 		}	
 	}
 
-	private void copyDefault(Object from, Object to)
-	{
-		["debug", "main", "output", "outputFileName", "platform", "target", "verbose"].each
-		{
-			it ->
-			if (from."$it" != null)
-			{
-				to."$it" = from."$it";
-			}
-		};
-
-		["compilerFlag","flag","haxelib","macro","resource"].each
-		{
-			if (from."$it" != null)
-			{
-				to."$it" += from."$it";
-			}
-		};
-	}
-
 	private void mergeSourceSet(Object from, Object to)
 	{
 		if (from != null)
@@ -108,7 +88,7 @@ class HaxePluginRuleSource extends RuleSource
 		HaxeFlavor flavor)
 	{
 		HaxeVariant variant = new HaxeVariant(defaultConfig);
-		copyDefault(flavor, variant);
+		Util.copyDefault(flavor, variant);
 		mergeSourceSet(flavor, variant);
 		mergeSourceSet(defaultConfig, variant);
 		return variant;
@@ -121,11 +101,11 @@ class HaxePluginRuleSource extends RuleSource
 		combo.each
 		{
 			flavor ->
-			copyDefault(flavor, variant);
+			Util.copyDefault(flavor, variant);
 			mergeSourceSet(flavor, variant);
 			mergeSourceSet(defaultConfig, variant);
 		}
-
+		
 		return variant;
 	}
 
@@ -150,8 +130,12 @@ class HaxePluginRuleSource extends RuleSource
 				@Override
 				public void execute(HaxeCompileTask t)
 				{
+					String groupName = "Haxe" + ((variant.group != null) 
+						? " : " + variant.group
+						: "");
+					
 					t.configurationHash = variant.hash();
-					t.setGroup("Haxe");
+					t.setGroup(groupName);
 					t.dependsOn = [CheckVersionTaskName, variant.getResourceTaskName()];
 					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
 					t.source = t.project.files(variant.src.unique(false));
@@ -272,7 +256,11 @@ interface HaxeFlavor extends Named, HaxeCompilerParameters, HaxePlatformParamete
 	String getDimension();
 	void setDimension(String value);
 
-	ModelMap<HaxeOutput> getOutputs();
+	String getOutputDirectoryName();
+	void setOutputDirectoryName(String value);
+
+	void setGroup(String value);
+	String getGroup();
 }
 
 @Managed
@@ -288,25 +276,12 @@ interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParamete
 }
 
 @Managed
-interface HaxeOutput extends HaxeCompilerParameters, HaxeOutputParameters
-{
-
-}
-
-@Managed
-interface HaxeOutputParameters
-{
-	String getFileName();
-	void setFileName(String value);
-}
-
-@Managed
 interface HaxePlatformParameters
 {
+	FunctionalSourceSet getSources();
+
 	String getPlatform();
 	void setPlatform(String value);
-
-	FunctionalSourceSet getSources();
 
 	void setOutput(File value);
 	File getOutput();

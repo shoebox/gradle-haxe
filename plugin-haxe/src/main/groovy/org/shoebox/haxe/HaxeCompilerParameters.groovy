@@ -22,9 +22,6 @@ interface HaxeCompilerParameters
 	String getTarget();
 	void setTarget(String value);
 
-	File getOutput();
-	void setOutput(File value);
-
 	Boolean getDebug();
 	void setDebug(Boolean value);
 
