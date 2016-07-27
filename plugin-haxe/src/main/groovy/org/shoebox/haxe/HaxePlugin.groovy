@@ -121,30 +121,73 @@ class HaxePluginRuleSource extends RuleSource
 		}
 	}
 
-	private void createCompileTask(HaxeVariant variant, ModelMap<Task> tasks)
+	private void createCompileTask(HaxeVariant variantWithoutBuildType, 
+		ModelMap<Task> tasks, 
+		ModelMap<HaxeBuildType> buildTypes)
 	{
-		tasks.create(variant.getCompileTaskName(),
-			HaxeCompileTask.class,
-			new Action<HaxeCompileTask>()
+		List<String> btContainerDependencies = [];
+		buildTypes.each
+		{
+			bt ->
+
+			HaxeVariant variant = variantWithoutBuildType.clone();
+			Util.copyDefault(bt, variant);
+			variant.name = variantWithoutBuildType.name;
+
+			String btVariantName = variant.getCompileTaskName(bt);
+			btContainerDependencies.push(btVariantName);
+
+			tasks.create(btVariantName,
+				HaxeCompileTask.class,
+				new Action<HaxeCompileTask>()
+				{
+					@Override
+					public void execute(HaxeCompileTask t)
+					{
+						t.configurationHash = variant.hash();
+						t.dependsOn = [
+							CheckVersionTaskName,
+							variant.getResourceTaskName(bt)
+						];
+
+						t.outputDirectory = variant.getOutputPath(t.project.buildDir);
+						t.source = t.project.files(variant.src.unique(false));
+						t.variant = variant;
+
+						if (variant.outputFileName != null)
+						{
+							String path = variant.getOutputPath(t.project.buildDir);
+							t.output = new File(path, "/" + variant.outputFileName);
+						}
+					}
+				}
+			);
+		}
+
+		createBuildTypesContainer(tasks, 
+			variantWithoutBuildType, 
+			btContainerDependencies);
+	}
+
+	private String getGroupName(HaxeVariant variant)
+	{
+		return "Haxe" + ((variant.group != null) 
+			? " : " + variant.group
+			: "");
+	}
+
+	private Task createBuildTypesContainer(ModelMap<Task> tasks, 
+		HaxeVariant variant, 
+		List<String> dependencies)
+	{
+		return tasks.create("haxe" + variant.name.capitalize(),
+			new Action<DefaultTask>()
 			{
 				@Override
-				public void execute(HaxeCompileTask t)
+				public void execute(DefaultTask t)
 				{
-					String groupName = "Haxe" + ((variant.group != null) 
-						? " : " + variant.group
-						: "");
-					
-					t.configurationHash = variant.hash();
-					t.setGroup(groupName);
-					t.dependsOn = [CheckVersionTaskName, variant.getResourceTaskName()];
-					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
-					t.source = t.project.files(variant.src.unique(false));
-					t.variant = variant;
-					if (variant.outputFileName != null)
-					{
-						t.output = new File(variant.getOutputPath(t.project.buildDir), 
-							"/" + variant.outputFileName);
-					}
+					t.dependsOn = dependencies;
+					t.setGroup(getGroupName(variant));
 				}
 			}
 		);
@@ -152,31 +195,33 @@ class HaxePluginRuleSource extends RuleSource
 
 	private void createResourceTask(final ModelMap<Task> tasks,
 		final HaxeVariant variant,
-		final File resDirectory)
+		final File resDirectory,
+		ModelMap<HaxeBuildType> buildTypes)
 	{
-		tasks.create(variant.getResourceTaskName(),
-			HaxeResourceTask.class,
-			new Action<HaxeResourceTask>()
-			{
-				@Override
-				public void execute(HaxeResourceTask t)
+		buildTypes.each
+		{
+			bt ->
+			tasks.create(variant.getResourceTaskName(bt),
+				HaxeResourceTask.class,
+				new Action<HaxeResourceTask>()
 				{
-					t.configurationHash = variant.hash();
-					t.variant = variant;
-					t.name = variant.getResourceTaskName();
-					t.components = variant.components;
-					t.outputDirectory = variant.getOutputPath(t.project.buildDir);
-					t.resDirectory = resDirectory;
+					@Override
+					public void execute(HaxeResourceTask t)
+					{
+						t.components = variant.components;
+						t.configurationHash = variant.hash();
+						t.outputDirectory = variant.getOutputPath(t.project.buildDir);
+						t.resDirectory = resDirectory;
+						t.variant = variant;
+					}
 				}
-			}
-		);
+			);
+		};
 	}
 
-	@Mutate 
-	void createCompileTasks(final ModelMap<Task> tasks, 
-		final HaxeModel model,
-		final @Path("haxe.dimensions") List<String> dimensions,
-		final @Path("haxe.defaultConfig") HaxeDefaultConfig defaultConfig)
+	@Mutate
+	void createCheckVersionTask(final ModelMap<Task> tasks, 
+		final HaxeModel model)
 	{
 		HaxeCheckVersion checkVersion = tasks.create(CheckVersionTaskName,
 			HaxeCheckVersion.class,
@@ -190,7 +235,15 @@ class HaxePluginRuleSource extends RuleSource
 				}
 			}
 		);
+	}
 
+	@Mutate 
+	void createCompileTasks(final ModelMap<Task> tasks, 
+		final HaxeModel model,
+		final @Path("haxe.dimensions") List<String> dimensions,
+		final @Path("haxe.defaultConfig") HaxeDefaultConfig defaultConfig,
+		final @Path("haxe.buildTypes") ModelMap<HaxeBuildType> buildTypes)
+	{
 		if (dimensions != null)
 		{
 			List<HaxeFlavor[]> groups = [];
@@ -208,12 +261,12 @@ class HaxePluginRuleSource extends RuleSource
 			{
 				combo ->
 				final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
-				variant.name = combo.collect { it.name.capitalize() }.join();
+				variant.name = combo.collect{it.name.capitalize()}.join();
 				variant.components = combo.collect{it.name};
 				validateVariant(variant);
 
-				createCompileTask(variant, tasks);
-				createResourceTask(tasks, variant, model.res);
+				createCompileTask(variant, tasks, buildTypes);
+				createResourceTask(tasks, variant, model.res, buildTypes);
 			}
 		}
 		else
@@ -226,8 +279,8 @@ class HaxePluginRuleSource extends RuleSource
 				variant.components = [it.name];
 				validateVariant(variant);
 
-				createCompileTask(variant, tasks);
-				createResourceTask(tasks, variant, model.res);
+				createCompileTask(variant, tasks, buildTypes);
+				createResourceTask(tasks, variant, model.res, buildTypes);
 			}	
 		}
 	}
@@ -248,31 +301,33 @@ interface HaxeModel
 	HaxeDefaultConfig getDefaultConfig();
 
 	ModelMap<HaxeFlavor> getFlavors();
+	ModelMap<HaxeBuildType> getBuildTypes();
 }
 
 @Managed
-interface HaxeFlavor extends Named, HaxeCompilerParameters, HaxePlatformParameters
+interface HaxeFlavor extends Groupable, Named, HaxeCompilerParameters, HaxePlatformParameters
 {
 	String getDimension();
 	void setDimension(String value);
 
 	String getOutputDirectoryName();
 	void setOutputDirectoryName(String value);
+}
 
+@Managed
+interface HaxeBuildType extends Named, HaxeCompilerParameters{}
+
+@Managed
+interface HaxeSourceSet extends LanguageSourceSet{}
+
+@Managed
+interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters{}
+
+@Managed
+interface Groupable
+{
 	void setGroup(String value);
 	String getGroup();
-}
-
-@Managed
-interface HaxeSourceSet extends LanguageSourceSet
-{
-
-}
-
-@Managed
-interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters
-{
-
 }
 
 @Managed

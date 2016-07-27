@@ -5,9 +5,10 @@ import org.gradle.model.*;
 import org.shoebox.haxe.*;
 
 import java.io.Serializable;
+import java.lang.Cloneable;
 import java.security.MessageDigest;
 
-public class HaxeVariant implements Serializable
+public class HaxeVariant implements Cloneable, Serializable
 {
 	Boolean debug;
 	Boolean verbose;
@@ -40,6 +41,11 @@ public class HaxeVariant implements Serializable
 		return "haxeRes" + name.capitalize();
 	}
 
+	public final String getResourceTaskName(HaxeBuildType bt)
+	{
+		return "haxeRes" + name.capitalize() + bt.name.capitalize();
+	}
+
 	public final File getOutputPath(File buildDir)
 	{
 		String folderName = outputDirectoryName == null ? name : outputDirectoryName;
@@ -50,6 +56,11 @@ public class HaxeVariant implements Serializable
 	public final String getCompileTaskName()
 	{
 		return "haxe" + name.capitalize();
+	}
+
+	public final String getCompileTaskName(HaxeBuildType bt)
+	{
+		return getCompileTaskName() + bt.name.capitalize();
 	}
 
 	String md5(String s)

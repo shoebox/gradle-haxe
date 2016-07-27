@@ -11,14 +11,22 @@ public class Util
 				&& target.hasProperty(key) 
 				&& !(key in ['class', 'metaClass'])) 
 			{
-				target[key] = value
+				try
+				{
+					target[key] = value
+				}
+				catch (e)
+				{
+					
+				}
 			}
 		}
 	}
 
 	public static void copyDefault(Object from, Object to)
 	{
-		["debug",
+		[
+			"debug",
 			"group",
 			"main",
 			"output",
@@ -26,19 +34,26 @@ public class Util
 			"outputFileName",
 			"platform",
 			"target",
-			"verbose"].each
+			"verbose"
+		].each
 		{
-			if (from."$it" != null)
+			if (to.hasProperty(it) && from.hasProperty(it))
 			{
-				to."$it" = from."$it";
+				if (from."$it" != null)
+				{
+						to."$it" = from."$it";
+				}
 			}
 		};
 
 		["compilerFlag","flag","haxelib","macro","resource"].each
 		{
-			if (from."$it" != null)
+			if (to.hasProperty(it) && from.hasProperty(it))
 			{
-				to."$it" += from."$it";
+				if (from."$it" != null)
+				{
+					to."$it" += from."$it";
+				}
 			}
 		};
 	}

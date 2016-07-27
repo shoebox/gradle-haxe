@@ -17,6 +17,7 @@ buildscript
 import org.shoebox.haxe.HaxePlugin;
 import org.shoebox.haxe.HaxeFlavor;
 import org.shoebox.haxe.HaxeSourceSet;
+import org.shoebox.haxe.HaxeBuildType;
 
 apply plugin: 'org.shoebox.haxe'
 
@@ -75,7 +76,7 @@ model
 				dimension "device"
 				outputFileName "index.mobile.js"
 				flag = ["mobile"]
-				group = "mobile"
+				group = "Mobile"
 			}
 
 			tablet(HaxeFlavor)
@@ -83,23 +84,23 @@ model
 				dimension "device"
 				outputFileName "index.tablet.js"
 				flag = ["tablet"]
-				group = "tablet"
+				group = "Tablet"
 			}
-
-			debug(HaxeFlavor)
+		}
+		
+		buildTypes
+		{
+			debug(HaxeBuildType)
 			{
-				dimension "mode"
 				debug true;
 				flag = ["flag-debug"]
 			}
 
-			release(HaxeFlavor)
+			release(HaxeBuildType)
 			{
-				dimension "mode"
 				debug false;
 				flag = ["flag-release"]
 			}
 		}
-		
 	}
 }
