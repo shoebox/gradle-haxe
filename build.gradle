@@ -1,106 +1,41 @@
-buildscript
+apply plugin: 'groovy'
+
+repositories
 {
-	repositories
-	{
-		flatDir
-		{
-			dirs 'plugin-haxe/'
-		}
-	}
-	dependencies
-	{
-		classpath group: 'org.shoebox', name: 'plugin-haxe', version: '0.2.0'
-	}
+	mavenCentral()
 }
 
-
-import org.shoebox.haxe.HaxePlugin;
-import org.shoebox.haxe.HaxeFlavor;
-import org.shoebox.haxe.HaxeSourceSet;
-import org.shoebox.haxe.HaxeBuildType;
-
-apply plugin: 'org.shoebox.haxe'
-
-buildDir = 'bin/'
-
-
-project.ext
+dependencies
 {
-	overrideOutput = null;
+	compile gradleApi()
+	compile localGroovy()
+	testCompile 'junit:junit:4+'
+	testCompile 'org.codehaus.groovy:groovy-all:2.4.4'
+	testCompile 'org.hamcrest:hamcrest-all:1.3'
+	testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+	testCompile gradleTestKit()
 }
 
-model
-{
-	haxe
+group = 'org.shoebox'
+version = '0.2.0'
+
+tasks.create(name: 'compileJar', type: Copy, dependsOn:'jar') {
+	from(file('build/libs/'))
+	into(".")
+	include('**/*.jar')
+}
+
+task createPluginClasspath{
+	def outputDir = file("${buildDir}/resources/test")
+
+	inputs.files sourceSets.test.runtimeClasspath
+	outputs.dir outputDir
+
+	doLast
 	{
-		version = "3.1.3"
-
-		dimensions = ["platform", "device", "environement", "mode"]
-		res = file("res");
-
-		defaultConfig
-		{
-			main = "Main"
-			sources
-			{
-				haxe(HaxeSourceSet)
-				{
-					source.srcDir "src"
-				}
-			}
-
-			platform "js"
-		}
-		
-		flavors
-		{
-			test(HaxeFlavor)
-			{
-				dimension "environement"
-				flag = ["test"]
-			}
-
-			staging(HaxeFlavor)
-			{
-				dimension "environement"
-				flag = ["staging"]
-			}
-
-			live(HaxeFlavor)
-			{
-				dimension "environement"
-			}
-
-			mobile(HaxeFlavor)
-			{
-				dimension "device"
-				outputFileName "index.mobile.js"
-				flag = ["mobile"]
-				group = "Mobile"
-			}
-
-			tablet(HaxeFlavor)
-			{
-				dimension "device"
-				outputFileName "index.tablet.js"
-				flag = ["tablet"]
-				group = "Tablet"
-			}
-		}
-		
-		buildTypes
-		{
-			debug(HaxeBuildType)
-			{
-				debug true;
-				flag = ["flag-debug"]
-			}
-
-			release(HaxeBuildType)
-			{
-				debug false;
-				flag = ["flag-release"]
-			}
-		}
+		outputDir.mkdirs()
+		file("${outputDir}/plugin-classpath.txt").text = sourceSets.test.runtimeClasspath.join('\n',)
 	}
 }
+
+test.dependsOn(['createPluginClasspath'])
