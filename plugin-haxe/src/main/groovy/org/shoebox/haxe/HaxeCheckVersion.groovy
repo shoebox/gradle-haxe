@@ -11,6 +11,7 @@ import org.gradle.logging.ProgressLogger;
 public class HaxeCheckVersion extends ProgressTask
 {
 	@Input
+	@Optional
 	String requiredVersion;
 
 	@OutputDirectory
@@ -24,6 +25,11 @@ public class HaxeCheckVersion extends ProgressTask
 	@TaskAction
 	public void run()
 	{
+		if (requiredVersion == null)
+		{
+			return;
+		}
+
 		ProgressLogger logger = getProgressLogger();
 		logger.start("Checking required haxe version", "Check version");
 		String version = getLocalVersion();

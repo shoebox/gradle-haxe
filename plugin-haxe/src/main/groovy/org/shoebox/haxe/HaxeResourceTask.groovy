@@ -9,13 +9,18 @@ public class HaxeResourceTask extends DefaultTask
 	@Input
 	List<String> components;
 
-	@InputDirectory
-	File resDirectory;
+	@Input
+	String configurationHash;
 
 	@OutputDirectory
 	File outputDirectory;
 
+	@InputDirectory
+	@Optional
+	File resDirectory;
+
 	FileCollection files;
+	HaxeVariant variant;
 
 	public HaxeResourceTask()
 	{
@@ -25,14 +30,18 @@ public class HaxeResourceTask extends DefaultTask
 	@TaskAction
 	public void haxeResouceAction()
 	{
-		generateFiles();
-		copyFiles();
+		if (resDirectory != null)
+		{
+			generateFiles();
+			copyFiles();
+		}
 	}
 
 	void generateFiles()
 	{
 		List<String> combos = ["all"];
 		combos.addAll(components);
+		combos.addAll(variant.flag);
 
 		List<List<String>> temp = [components];
 		components.each

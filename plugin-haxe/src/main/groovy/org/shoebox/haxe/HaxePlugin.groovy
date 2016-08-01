@@ -24,6 +24,8 @@ class HaxePlugin implements Plugin<Project>
 
 class HaxePluginRuleSource extends RuleSource
 {
+	final static String CheckVersionTaskName = "CheckHaxeVersion";
+
 	@Model
 	void haxe(HaxeModel haxe){}
 
@@ -31,7 +33,7 @@ class HaxePluginRuleSource extends RuleSource
 	void validateFlavorDimension(@Each HaxeFlavor flavor, 
 		@Path("haxe.dimensions") List<String> dimensions)
 	{
-		if (flavor.dimension != null)
+		if (dimensions != null)
 		{
 			if (flavor.dimension == null || !dimensions.contains(flavor.dimension))
 			{
@@ -42,9 +44,21 @@ class HaxePluginRuleSource extends RuleSource
 	}
 
 	@Validate
+	void validateDefaultConfigSourceSet(@Path("haxe.defaultConfig")
+		HaxeDefaultConfig defaultConfig)
+	{
+		validateSourceSet(defaultConfig.sources);
+	}
+
+	@Validate
 	void validateFlavorSourceSet(@Each HaxeFlavor flavor)
 	{
-		flavor.sources.values().each
+		validateSourceSet(flavor.sources);
+	}
+
+	private void validateSourceSet(FunctionalSourceSet sourceSet)
+	{
+		sourceSet.values().each
 		{
 			it ->
 			it.source.srcDirs.each
@@ -55,25 +69,161 @@ class HaxePluginRuleSource extends RuleSource
 					throw new RuntimeException("Source path : ${file} on flavor:${flavor} is invalid");
 				}
 			}
-		}		
+		}	
 	}
 
-	@Mutate 
-	void createCompileTasks(ModelMap<Task> tasks, HaxeModel model)
+	private void mergeSourceSet(Object from, Object to)
 	{
-		List<HaxeFlavor[]> groups = [];
-		model.dimensions.each
+		if (from != null)
 		{
-			dim ->
-			HaxeFlavor[] list = model.flavors.findAll{it.dimension == dim};
-			if (list.size() != 0)
+			from.sources.values().each
 			{
-				groups.push(list);
-			}
+				it ->
+				to.src += it.source.getSrcDirs();
+			};
+		}
+	}
+
+	private HaxeVariant createVariantFromFlavor(HaxeDefaultConfig defaultConfig,
+		HaxeFlavor flavor)
+	{
+		HaxeVariant variant = new HaxeVariant(defaultConfig);
+		Util.copyDefault(flavor, variant);
+		mergeSourceSet(flavor, variant);
+		mergeSourceSet(defaultConfig, variant);
+		return variant;
+	}
+
+	private HaxeVariant createVariantFromCombo(HaxeDefaultConfig defaultConfig, 
+		ArrayList combo)
+	{
+		HaxeVariant variant = new HaxeVariant(defaultConfig);
+		combo.each
+		{
+			flavor ->
+			Util.copyDefault(flavor, variant);
+			mergeSourceSet(flavor, variant);
+			mergeSourceSet(defaultConfig, variant);
+		}
+		
+		return variant;
+	}
+
+	private void validateVariant(HaxeVariant variant)
+	{
+		if (variant.platform == null)
+		{
+			throw new RuntimeException("The target : ${variant.name} has no defined target platform");
+		}
+		else if (variant.main == null)
+		{
+			throw new RuntimeException("The target : ${variant.name} has no defined main class");
+		}
+	}
+
+	private void createCompileTask(HaxeVariant variantWithoutBuildType, 
+		ModelMap<Task> tasks, 
+		ModelMap<HaxeBuildType> buildTypes)
+	{
+		List<String> btContainerDependencies = [];
+		buildTypes.each
+		{
+			bt ->
+
+			HaxeVariant variant = variantWithoutBuildType.clone();
+			Util.copyDefault(bt, variant);
+			variant.name = variantWithoutBuildType.name;
+
+			String btVariantName = variant.getCompileTaskName(bt);
+			btContainerDependencies.push(btVariantName);
+
+			tasks.create(btVariantName,
+				HaxeCompileTask.class,
+				new Action<HaxeCompileTask>()
+				{
+					@Override
+					public void execute(HaxeCompileTask t)
+					{
+						t.configurationHash = variant.hash();
+						t.dependsOn = [
+							CheckVersionTaskName,
+							variant.getResourceTaskName(bt)
+						];
+
+						t.outputDirectory = variant.getOutputPath(t.project.buildDir);
+						t.source = t.project.files(variant.src.unique(false));
+						t.variant = variant;
+
+						if (variant.outputFileName != null)
+						{
+							String path = variant.getOutputPath(t.project.buildDir);
+							t.output = new File(path, "/" + variant.outputFileName);
+						}
+					}
+				}
+			);
 		}
 
-		String checkVersionTaskName = "CheckHaxeVersion";
-		HaxeCheckVersion checkVersion = tasks.create(checkVersionTaskName,
+		createBuildTypesContainer(tasks, 
+			variantWithoutBuildType, 
+			btContainerDependencies);
+	}
+
+	private String getGroupName(HaxeVariant variant)
+	{
+		return "Haxe" + ((variant.group != null) 
+			? " : " + variant.group
+			: "");
+	}
+
+	private Task createBuildTypesContainer(ModelMap<Task> tasks, 
+		HaxeVariant variant, 
+		List<String> dependencies)
+	{
+		return tasks.create("haxe" + variant.name.capitalize(),
+			new Action<DefaultTask>()
+			{
+				@Override
+				public void execute(DefaultTask t)
+				{
+					t.dependsOn = dependencies;
+					t.setGroup(getGroupName(variant));
+				}
+			}
+		);
+	}
+
+	private void createResourceTask(final ModelMap<Task> tasks,
+		final HaxeVariant variant,
+		final File resDirectory,
+		ModelMap<HaxeBuildType> buildTypes)
+	{
+		buildTypes.each
+		{
+			bt ->
+			tasks.create(variant.getResourceTaskName(bt),
+				HaxeResourceTask.class,
+				new Action<HaxeResourceTask>()
+				{
+					@Override
+					public void execute(HaxeResourceTask t)
+					{
+						t.components = variant.components;
+						t.configurationHash = variant.hash();
+						t.outputDirectory = variant.getOutputPath(t.project.buildDir);
+						t.resDirectory = resDirectory;
+						t.variant = variant;
+					}
+				}
+			);
+		};
+	}
+
+	@Mutate
+	void createCheckVersionTask(final ModelMap<Task> tasks, 
+		final HaxeModel model)
+	{
+		HaxeCheckVersion checkVersion = tasks.create(CheckVersionTaskName,
 			HaxeCheckVersion.class,
 			new Action<HaxeCheckVersion>()
 			{
@@ -85,92 +235,53 @@ class HaxePluginRuleSource extends RuleSource
 				}
 			}
 		);
+	}
 
-		GroovyCollections.combinations(groups).each
+	@Mutate 
+	void createCompileTasks(final ModelMap<Task> tasks, 
+		final HaxeModel model,
+		final @Path("haxe.dimensions") List<String> dimensions,
+		final @Path("haxe.defaultConfig") HaxeDefaultConfig defaultConfig,
+		final @Path("haxe.buildTypes") ModelMap<HaxeBuildType> buildTypes)
+	{
+		if (dimensions != null)
 		{
-			combo ->
-			final HaxeVariant variant = new HaxeVariant();
-			final String comboName = combo.collect { it.name.capitalize() }.join();
-			variant.name = "haxe" + comboName;
-			combo.each
+			List<HaxeFlavor[]> groups = [];
+			dimensions.each
 			{
-				flavor ->
-
-				["debug", "verbose", "output", "main", "target", "outputFileName", 
-					"platform"].each
+				dim ->
+				HaxeFlavor[] list = model.flavors.findAll{it.dimension == dim};
+				if (list.size() != 0)
 				{
-					it ->
-					if (flavor."$it" != null)
-					{
-						variant."$it" = flavor."$it";
-					}
-				};
-
-				["resource", "compilerFlag", "flag", "haxelib", "macro"].each
-				{
-					if (flavor."$it" != null)
-					{
-						variant."$it" += flavor."$it";
-					}
-				};
-
-				flavor.sources.values().each
-				{
-					it ->
-					variant.src += it.source.getSrcDirs();
-				};
-			}
-
-			if (variant.platform == null)
-			{
-				throw new RuntimeException("The target : ${variant.name} has no defined target platform");
-			}
-			else if (variant.main == null)
-			{
-				throw new RuntimeException("The target : ${variant.name} has no defined main class");
-			}
-
-			final List<String> components = combo.collect{it.name};
-			final String syncName = "haxeRes" + comboName;
-
-			tasks.create(variant.name,
-				HaxeCompileTask.class,
-				new Action<HaxeCompileTask>()
-				{
-					@Override
-					public void execute(HaxeCompileTask t)
-					{
-						File output = new File(t.project.buildDir, 
-							(variant.debug ? "debug/" : "release/") + comboName);
-						t.setGroup("Haxe");
-						t.dependsOn = [checkVersionTaskName, syncName];
-						t.components = components;
-						t.outputDirectory = output;
-						t.source = t.project.files(variant.src);
-						t.variant = variant;
-						if (variant.outputFileName != null)
-						{
-							t.output = new File(t.outputDirectory,
-								comboName + variant.outputFileName);
-						}
-					}
+					groups.push(list);
 				}
-			);
+			}
 
-			tasks.create(syncName, HaxeResourceTask.class,
-				new Action<HaxeResourceTask>()
-				{
-					@Override
-					public void execute(HaxeResourceTask t)
-					{
-						File output = new File(t.project.buildDir, 
-							(variant.debug ? "debug/" : "release/") + comboName);
-						t.components = components;
-						t.outputDirectory = output;
-						t.resDirectory = model.res;
-					}
-				}
-			);
+			GroovyCollections.combinations(groups).each
+			{
+				combo ->
+				final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
+				variant.name = combo.collect{it.name.capitalize()}.join();
+				variant.components = combo.collect{it.name};
+				validateVariant(variant);
+
+				createCompileTask(variant, tasks, buildTypes);
+				createResourceTask(tasks, variant, model.res, buildTypes);
+			}
+		}
+		else
+		{
+			model.flavors.each
+			{
+				it ->
+				HaxeVariant variant = createVariantFromFlavor(defaultConfig, it);
+				variant.name = it.name;
+				variant.components = [it.name];
+				validateVariant(variant);
+
+				createCompileTask(variant, tasks, buildTypes);
+				createResourceTask(tasks, variant, model.res, buildTypes);
+			}	
 		}
 	}
 }
@@ -187,35 +298,46 @@ interface HaxeModel
 	String getVersion();
 	void setVersion(String value);
 
+	HaxeDefaultConfig getDefaultConfig();
+
 	ModelMap<HaxeFlavor> getFlavors();
+	ModelMap<HaxeBuildType> getBuildTypes();
 }
 
 @Managed
-interface HaxeFlavor extends Named, HaxeCompilerParameters
+interface HaxeFlavor extends Groupable, Named, HaxeCompilerParameters, HaxePlatformParameters
 {
 	String getDimension();
 	void setDimension(String value);
+
+	String getOutputDirectoryName();
+	void setOutputDirectoryName(String value);
+}
+
+@Managed
+interface HaxeBuildType extends Named, HaxeCompilerParameters{}
+
+@Managed
+interface HaxeSourceSet extends LanguageSourceSet{}
+
+@Managed
+interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters{}
+
+@Managed
+interface Groupable
+{
+	void setGroup(String value);
+	String getGroup();
+}
+
+@Managed
+interface HaxePlatformParameters
+{
+	FunctionalSourceSet getSources();
 
 	String getPlatform();
 	void setPlatform(String value);
 
 	void setOutput(File value);
 	File getOutput();
-
-	FunctionalSourceSet getSources();
-}
-
-interface HaxeResource
-{
-	File getFile();
-	void setFile(File value);
-
-	String getName();
-	void setName(String value);
-}
-
-@Managed
-interface HaxeSourceSet extends LanguageSourceSet
-{
-
 }
