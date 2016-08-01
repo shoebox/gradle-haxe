@@ -194,13 +194,17 @@ class HaxePluginRuleSource extends RuleSource
 	}
 
 	private void createResourceTask(final ModelMap<Task> tasks,
-		final HaxeVariant variant,
+		final HaxeVariant variantWithoutBuildType,
 		final File resDirectory,
 		ModelMap<HaxeBuildType> buildTypes)
 	{
 		buildTypes.each
 		{
 			bt ->
+			HaxeVariant variant = variantWithoutBuildType.clone();
+			Util.copyDefault(bt, variant);
+			variant.name = variantWithoutBuildType.name;
+			
 			tasks.create(variant.getResourceTaskName(bt),
 				HaxeResourceTask.class,
 				new Action<HaxeResourceTask>()

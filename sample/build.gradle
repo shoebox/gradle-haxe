@@ -9,7 +9,7 @@ buildscript
 	}
 	dependencies
 	{
-		classpath group: 'org.shoebox', name: 'plugin-haxe', version: '0.2.0'
+		classpath group: 'org.shoebox', name: 'gradle-haxe', version: '0.2.1'
 	}
 }
 
@@ -73,6 +73,7 @@ model
 
 			mobile(HaxeFlavor)
 			{
+				outputDirectoryName = "universal-web"
 				dimension "device"
 				outputFileName "index.mobile.js"
 				flag = ["mobile"]
@@ -81,6 +82,7 @@ model
 
 			tablet(HaxeFlavor)
 			{
+				outputDirectoryName = "universal-web"
 				dimension "device"
 				outputFileName "index.tablet.js"
 				flag = ["tablet"]
