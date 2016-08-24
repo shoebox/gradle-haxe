@@ -17,6 +17,7 @@ class HaxePlugin implements Plugin<Project>
 	@Override
 	public void apply(Project project)
 	{
+		Logger.setup(project);
 		project.plugins.apply(org.gradle.language.base.plugins.LanguageBasePlugin);
 		project.plugins.apply(HaxePluginRuleSource);
 	}	

@@ -1,6 +1,11 @@
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
+System.setProperty("org.gradle.color.failure", "RED")
+System.setProperty("org.gradle.color.progressstatus", "YELLOW")
+System.setProperty("org.gradle.color.success", "GREEN")
+
+
 dependencies
 {
 	compile gradleApi()
@@ -14,12 +19,12 @@ dependencies
 }
 
 group = 'org.shoebox'
-version = '0.2.1'
+version = '0.2.2'
 
 tasks.create(name: 'compileJar', type: Copy, dependsOn:'jar') 
 {
 	from(file('build/libs/'))
-	into(".")
+	into(".temp")
 	include('**/*.jar')
 }
 

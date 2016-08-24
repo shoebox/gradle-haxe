@@ -4,7 +4,7 @@ buildscript
 	{
 		flatDir
 		{
-			dirs '../'
+			dirs '../.temp'
 		}
 	}
 	dependencies
