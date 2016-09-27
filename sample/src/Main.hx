@@ -4,6 +4,7 @@ class Main
 {
 	public function new()
 	{
+		// toto();
 		trace("constructor");
 		#if desktop
 			trace("desktop");

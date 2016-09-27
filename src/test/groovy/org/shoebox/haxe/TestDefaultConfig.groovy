@@ -1,17 +1,12 @@
 package org.shoebox;
 
-import spock.lang.Specification;
 import org.gradle.api.Project;
+import org.gradle.testfixtures.ProjectBuilder;
+import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import org.gradle.testkit.runner.GradleRunner;
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testfixtures.ProjectBuilder;
-
-import org.gradle.api.Project;
-import org.junit.Test;
-
-import org.shoebox.haxe.HaxeCompileTask;
+import spock.lang.Specification;
 
 class TestDefaultConfig extends Specification
 {
@@ -41,7 +36,10 @@ class TestDefaultConfig extends Specification
                 id 'org.shoebox.haxe'
             }
 
-            import org.shoebox.haxe.HaxeFlavor;
+            import org.shoebox.haxe.HaxePlugin;
+			import org.shoebox.haxe.HaxeFlavor;
+			import org.shoebox.haxe.HaxeSourceSet;
+			import org.shoebox.haxe.HaxeBuildType;
 
 			model
 			{
@@ -50,20 +48,19 @@ class TestDefaultConfig extends Specification
 					defaultConfig
 					{
 						main = "Main"
+						platform "js"
 					}
 
 					flavors
 					{
-						test1(HaxeFlavor)
-						{
-							main = "MainTest1"
-							platform "js"
-						}
+						test1(HaxeFlavor) {}
+						test2(HaxeFlavor) {}
+					}
 
-						test2(HaxeFlavor)
-						{
-							platform "js"
-						}
+					buildTypes
+					{
+						debug(HaxeBuildType) {}
+						release(HaxeBuildType) {}
 					}
 				}
 			}
@@ -72,15 +69,12 @@ class TestDefaultConfig extends Specification
 		when:
 		BuildResult result = GradleRunner.create()
 			.withProjectDir(testProjectDir.root)
-			.withArguments('haxeTest1')
+			.withArguments('haxeTest1Debug')
 			.withPluginClasspath(pluginClasspath)
 			.build();
 
 		then:
-
 		println project;
 		println project.getTasks();
-
-		println "t ::: " + result.task(":haxeTest1");
 	}
 }

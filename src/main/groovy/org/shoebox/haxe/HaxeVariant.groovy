@@ -2,10 +2,7 @@ package org.shoebox.haxe;
 
 import org.gradle.api.*;
 import org.gradle.model.*;
-import org.shoebox.haxe.*;
 
-import java.io.Serializable;
-import java.lang.Cloneable;
 import java.security.MessageDigest;
 
 public class HaxeVariant implements Cloneable, Serializable
@@ -80,7 +77,7 @@ public class HaxeVariant implements Cloneable, Serializable
 			}
 		}
 
-		["components", "src", "resource", "compilerFlag", "flag", "haxelib", 
+		["components", "src", "resource", "compilerFlag", "flag", "haxelib",
 			"macro"].each
 		{
 			it ->
@@ -88,7 +85,7 @@ public class HaxeVariant implements Cloneable, Serializable
 				result += this."$it".toListString();
 		}
 
-		["main","name","outputFileName","platform","target"].each
+		["main", "name", "outputFileName", "platform", "target"].each
 		{
 			it ->
 			if (this."$it" != null)

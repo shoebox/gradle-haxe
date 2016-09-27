@@ -1,17 +1,9 @@
 package org.shoebox;
 
-import spock.lang.Specification;
-import org.gradle.api.Project;
+import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
-import org.gradle.testkit.runner.GradleRunner;
-import org.gradle.testfixtures.ProjectBuilder;
-
-import org.gradle.api.Project;
-import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Test;
-
-import org.shoebox.haxe.HaxeCheckVersion;
+import spock.lang.Specification;
 
 class TestFlavor extends Specification
 {
@@ -31,16 +23,12 @@ class TestFlavor extends Specification
 	{
 		given:
 		buildFile << """
-			plugins
-			{
+			plugins {
                 id 'org.shoebox.haxe'
             }
 
-			model
-			{
-				haxe
-				{
-
+			model {
+				haxe {
 				}
 			}
 		"""
@@ -61,35 +49,23 @@ class TestFlavor extends Specification
 
 		given:
 		buildFile << """
-			plugins
-			{
+			plugins {
                 id 'org.shoebox.haxe'
             }
 
 			import org.shoebox.haxe.HaxeFlavor;
 
-			model
-			{
-				haxe
-				{
-					flavors
-					{
-						all
-						{
+			model {
+				haxe {
+					flavors {
+						all {
 							set ->
 							set.main = "Main";
 							set.platform "js"
 						}
 
-						test1(HaxeFlavor)
-						{
-							
-						}
-
-						test2(HaxeFlavor)
-						{
-							
-						}
+						test1(HaxeFlavor) {}
+						test2(HaxeFlavor) {}
 					}
 				}
 			}
@@ -112,45 +88,36 @@ class TestFlavor extends Specification
 
 		given:
 		buildFile << """
-			plugins
-			{
+			plugins {
                 id 'org.shoebox.haxe'
             }
 
 			import org.shoebox.haxe.HaxeFlavor;
 
-			model
-			{
-				haxe
-				{
+			model {
+				haxe {
 					dimensions = ["test", "hello"]
 
-					flavors
-					{
-						all
-						{
+					flavors {
+						all {
 							set ->
 							set.main = "Main";
 							set.platform "js"
 						}
 
-						test1(HaxeFlavor)
-						{
+						test1(HaxeFlavor) {
 							dimension "test"
 						}
 
-						test2(HaxeFlavor)
-						{
+						test2(HaxeFlavor) {
 							dimension "test"
 						}
 
-						hello1(HaxeFlavor)
-						{
+						hello1(HaxeFlavor) {
 							dimension "hello"
 						}
 
-						hello2(HaxeFlavor)
-						{
+						hello2(HaxeFlavor) {
 							dimension "hello"
 						}
 					}
@@ -170,41 +137,33 @@ class TestFlavor extends Specification
 		result.output.contains('haxeTest2Hello2');
 	}
 
-
 	def "Flavor with undefined dimension should throw error"()
 	{
 
 		given:
 		buildFile << """
-			plugins
-			{
+			plugins {
                 id 'org.shoebox.haxe'
             }
 
 			import org.shoebox.haxe.HaxeFlavor;
 
-			model
-			{
-				haxe
-				{
+			model {
+				haxe {
 					dimensions = ["test"]
 
-					flavors
-					{
-						all
-						{
+					flavors {
+						all {
 							set ->
 							set.main = "Main";
 							set.platform "js"
 						}
 
-						test1(HaxeFlavor)
-						{
+						test1(HaxeFlavor) {
 							dimension "test"
 						}
 
-						hello1(HaxeFlavor)
-						{
+						hello1(HaxeFlavor) {
 							dimension "hello"
 						}
 					}

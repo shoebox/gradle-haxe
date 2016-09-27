@@ -4,12 +4,6 @@ import org.gradle.api.*;
 import org.gradle.api.task.*;
 import org.gradle.language.base.*;
 import org.gradle.model.*;
-import org.shoebox.haxe.HaxeResourceTask;
-import org.gradle.model.internal.core.UnmanagedStruct;
-import org.apache.log4j.LogManager;
-import java.math.BigInteger;
-import java.security.MessageDigest
-import org.codehaus.groovy.util.HashCodeHelper;
 import groovy.json.*;
 
 class HaxePlugin implements Plugin<Project>
@@ -17,27 +11,30 @@ class HaxePlugin implements Plugin<Project>
 	@Override
 	public void apply(Project project)
 	{
+		Logger.setup(project);
 		project.plugins.apply(org.gradle.language.base.plugins.LanguageBasePlugin);
 		project.plugins.apply(HaxePluginRuleSource);
-	}	
+	}
 }
 
 class HaxePluginRuleSource extends RuleSource
 {
-	final static String CheckVersionTaskName = "CheckHaxeVersion";
+	final static String CHECK_VERSION_TASK_NAME = "CheckHaxeVersion";
 
 	@Model
-	void haxe(HaxeModel haxe){}
+	void haxe(HaxeModel haxe)
+	{
+	}
 
 	@Validate
-	void validateFlavorDimension(@Each HaxeFlavor flavor, 
+	void validateFlavorDimension(@Each HaxeFlavor flavor,
 		@Path("haxe.dimensions") List<String> dimensions)
 	{
 		if (dimensions != null)
 		{
 			if (flavor.dimension == null || !dimensions.contains(flavor.dimension))
 			{
-				throw new RuntimeException("The flavor : " + flavor 
+				throw new RuntimeException("The flavor : " + flavor
 					+ "contains a unknow flavor dimension : '${flavor.dimension}'");
 			}
 		}
@@ -69,7 +66,7 @@ class HaxePluginRuleSource extends RuleSource
 					throw new RuntimeException("Source path : ${file} on flavor:${flavor} is invalid");
 				}
 			}
-		}	
+		}
 	}
 
 	private void mergeSourceSet(Object from, Object to)
@@ -94,7 +91,7 @@ class HaxePluginRuleSource extends RuleSource
 		return variant;
 	}
 
-	private HaxeVariant createVariantFromCombo(HaxeDefaultConfig defaultConfig, 
+	private HaxeVariant createVariantFromCombo(HaxeDefaultConfig defaultConfig,
 		ArrayList combo)
 	{
 		HaxeVariant variant = new HaxeVariant(defaultConfig);
@@ -105,7 +102,7 @@ class HaxePluginRuleSource extends RuleSource
 			mergeSourceSet(flavor, variant);
 			mergeSourceSet(defaultConfig, variant);
 		}
-		
+
 		return variant;
 	}
 
@@ -121,8 +118,8 @@ class HaxePluginRuleSource extends RuleSource
 		}
 	}
 
-	private void createCompileTask(HaxeVariant variantWithoutBuildType, 
-		ModelMap<Task> tasks, 
+	private void createCompileTask(HaxeVariant variantWithoutBuildType,
+		ModelMap<Task> tasks,
 		ModelMap<HaxeBuildType> buildTypes)
 	{
 		List<String> btContainerDependencies = [];
@@ -146,10 +143,9 @@ class HaxePluginRuleSource extends RuleSource
 					{
 						t.configurationHash = variant.hash();
 						t.dependsOn = [
-							CheckVersionTaskName,
+							CHECK_VERSION_TASK_NAME,
 							variant.getResourceTaskName(bt)
 						];
-
 						t.outputDirectory = variant.getOutputPath(t.project.buildDir);
 						t.source = t.project.files(variant.src.unique(false));
 						t.variant = variant;
@@ -164,28 +160,32 @@ class HaxePluginRuleSource extends RuleSource
 			);
 		}
 
-		createBuildTypesContainer(tasks, 
-			variantWithoutBuildType, 
+		createBuildTypesContainer(tasks,
+			variantWithoutBuildType,
 			btContainerDependencies);
 	}
 
 	private String getGroupName(HaxeVariant variant)
 	{
-		return "Haxe" + ((variant.group != null) 
+		return "Haxe" + ((variant.group != null)
 			? " : " + variant.group
 			: "");
 	}
 
-	private Task createBuildTypesContainer(ModelMap<Task> tasks, 
-		HaxeVariant variant, 
-		List<String> dependencies)
+	private Task createBuildTypesContainer(final ModelMap<Task> tasks,
+		final HaxeVariant variant,
+		final List<String> dependencies)
 	{
-		return tasks.create("haxe" + variant.name.capitalize(),
-			new Action<DefaultTask>()
+
+		String name = "haxe" + variant.name.capitalize();
+		return tasks.create(name,
+			HaxeTaskGroupTask.class,
+			new Action<HaxeTaskGroupTask>()
 			{
 				@Override
-				public void execute(DefaultTask t)
+				public void execute(HaxeTaskGroupTask t)
 				{
+					t.test = dependencies;
 					t.dependsOn = dependencies;
 					t.setGroup(getGroupName(variant));
 				}
@@ -204,7 +204,7 @@ class HaxePluginRuleSource extends RuleSource
 			HaxeVariant variant = variantWithoutBuildType.clone();
 			Util.copyDefault(bt, variant);
 			variant.name = variantWithoutBuildType.name;
-			
+
 			tasks.create(variant.getResourceTaskName(bt),
 				HaxeResourceTask.class,
 				new Action<HaxeResourceTask>()
@@ -224,10 +224,10 @@ class HaxePluginRuleSource extends RuleSource
 	}
 
 	@Mutate
-	void createCheckVersionTask(final ModelMap<Task> tasks, 
+	void createCheckVersionTask(final ModelMap<Task> tasks,
 		final HaxeModel model)
 	{
-		HaxeCheckVersion checkVersion = tasks.create(CheckVersionTaskName,
+		HaxeCheckVersion checkVersion = tasks.create(CHECK_VERSION_TASK_NAME,
 			HaxeCheckVersion.class,
 			new Action<HaxeCheckVersion>()
 			{
@@ -241,8 +241,8 @@ class HaxePluginRuleSource extends RuleSource
 		);
 	}
 
-	@Mutate 
-	void createCompileTasks(final ModelMap<Task> tasks, 
+	@Mutate
+	void createCompileTasks(final ModelMap<Task> tasks,
 		final HaxeModel model,
 		final @Path("haxe.dimensions") List<String> dimensions,
 		final @Path("haxe.defaultConfig") HaxeDefaultConfig defaultConfig,
@@ -254,7 +254,7 @@ class HaxePluginRuleSource extends RuleSource
 			dimensions.each
 			{
 				dim ->
-				HaxeFlavor[] list = model.flavors.findAll{it.dimension == dim};
+				HaxeFlavor[] list = model.flavors.findAll { it.dimension == dim };
 				if (list.size() != 0)
 				{
 					groups.push(list);
@@ -265,8 +265,8 @@ class HaxePluginRuleSource extends RuleSource
 			{
 				combo ->
 				final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
-				variant.name = combo.collect{it.name.capitalize()}.join();
-				variant.components = combo.collect{it.name};
+				variant.name = combo.collect { it.name.capitalize() }.join();
+				variant.components = combo.collect { it.name };
 				validateVariant(variant);
 
 				createCompileTask(variant, tasks, buildTypes);
@@ -285,7 +285,7 @@ class HaxePluginRuleSource extends RuleSource
 
 				createCompileTask(variant, tasks, buildTypes);
 				createResourceTask(tasks, variant, model.res, buildTypes);
-			}	
+			}
 		}
 	}
 }
@@ -319,13 +319,19 @@ interface HaxeFlavor extends Groupable, Named, HaxeCompilerParameters, HaxePlatf
 }
 
 @Managed
-interface HaxeBuildType extends Named, HaxeCompilerParameters{}
+interface HaxeBuildType extends Named, HaxeCompilerParameters
+{
+}
 
 @Managed
-interface HaxeSourceSet extends LanguageSourceSet{}
+interface HaxeSourceSet extends LanguageSourceSet
+{
+}
 
 @Managed
-interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters{}
+interface HaxeDefaultConfig extends HaxeCompilerParameters, HaxePlatformParameters
+{
+}
 
 @Managed
 interface Groupable

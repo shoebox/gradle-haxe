@@ -1,6 +1,5 @@
 package org.shoebox.haxe;
 
-import org.gradle.api.Nullable;
 import org.gradle.model.*;
 import org.gradle.api.tasks.*;
 

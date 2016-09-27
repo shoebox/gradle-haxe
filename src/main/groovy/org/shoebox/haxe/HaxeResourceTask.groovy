@@ -49,16 +49,18 @@ public class HaxeResourceTask extends DefaultTask
 			temp.push(components);
 			for (combo in GroovyCollections.combinations(temp))
 			{
-				String groupName = combo.collect{it}.unique().join("-");
+				String groupName = combo.collect { it }.unique().join("-");
 				combos.push(groupName);
-			}	
+			}
 		}
 
-		List<String> valid = combos.findAll{
+		List<String> valid = combos.findAll
+		{
 			new File(resDirectory, it).exists()
 		}.unique();
 
-		files = project.files(valid.collect{
+		files = project.files(valid.collect
+		{
 			it ->
 			new File(resDirectory, it);
 		});
@@ -66,8 +68,8 @@ public class HaxeResourceTask extends DefaultTask
 
 	void copyFiles()
 	{
-		project.tasks.create("Copy files" + name, 
-			Copy.class, 
+		project.tasks.create("Copy files" + name,
+			Copy.class,
 			new Action<Copy>()
 			{
 				@Override

@@ -103,6 +103,12 @@ model
 				debug false;
 				flag = ["flag-release"]
 			}
+
+			production(HaxeBuildType)
+			{
+				debug false;
+				flag = ["flag-production"]
+			}
 		}
 	}
 }

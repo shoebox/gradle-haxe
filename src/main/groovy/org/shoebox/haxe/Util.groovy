@@ -7,9 +7,9 @@ public class Util
 		source.properties.each
 		{
 			key, value ->
-			if (value != null 
-				&& target.hasProperty(key) 
-				&& !(key in ['class', 'metaClass'])) 
+			if (value != null
+				&& target.hasProperty(key)
+				&& !(key in ['class', 'metaClass']))
 			{
 				try
 				{
@@ -17,7 +17,7 @@ public class Util
 				}
 				catch (e)
 				{
-					
+					e.printStackTrace();
 				}
 			}
 		}
@@ -46,7 +46,7 @@ public class Util
 			}
 		};
 
-		["compilerFlag","flag","haxelib","macro","resource"].each
+		["compilerFlag", "flag", "haxelib", "macro", "resource"].each
 		{
 			if (to.hasProperty(it) && from.hasProperty(it))
 			{
