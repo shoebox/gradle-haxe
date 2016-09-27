@@ -61,7 +61,7 @@ public class HaxeCheckVersion extends DefaultTask
 		else
 		{
 			String error = "The current haxe version is : '${currentVersion}'\n";
-			error += "The project require Haxe version : '${requiredVersion}'' \n";
+			error += "The project require Haxe version : '${requiredVersion}' \n";
 			error += "Download and install the required version from here :\n";
 			error += "http://haxe.org/download/version/${requiredVersion}/\n";
 			throw new Exception(error);

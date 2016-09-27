@@ -53,7 +53,7 @@ class TestBuildType extends Specification
 	    	.collect { new File(it) };
 	}
 
-	def "Cannot run a build without specifiy a build type"()
+	def "Cannot run a mobile build without specifiy a build type"()
 	{
 		given:
 		buildFile << BUILD_FILE_CONTENT;
@@ -70,7 +70,7 @@ class TestBuildType extends Specification
 		assert result.output.contains('java.lang.Exception: No build type specified');
 	}
 
-	def "But can run a sub build type successfully"()
+	def "But can run a mobile sub build type successfully"()
 	{
 		given:
 		buildFile << BUILD_FILE_CONTENT;
@@ -84,6 +84,40 @@ class TestBuildType extends Specification
 
 		then:
 		def outcome = result.task(":haxeMobileDebug").getOutcome();
+		assert (outcome == SUCCESS || outcome == UP_TO_DATE);
+	}
+
+	def "Cannot run a Tablet build without specifiy a build type"()
+	{
+		given:
+		buildFile << BUILD_FILE_CONTENT;
+
+		when:
+		def result = GradleRunner.create()
+			.withProjectDir(testProjectDir.root)
+			.withArguments('haxeTablet')
+			.withPluginClasspath(pluginClasspath)
+			.buildAndFail();
+
+		then:
+		assert result.task(":haxeTablet").getOutcome() == FAILED;
+		assert result.output.contains('java.lang.Exception: No build type specified');
+	}
+
+	def "But can run a Tablet sub build type successfully"()
+	{
+		given:
+		buildFile << BUILD_FILE_CONTENT;
+
+		when:
+		def result = GradleRunner.create()
+			.withProjectDir(testProjectDir.root)
+			.withArguments('haxeTabletDebug')
+			.withPluginClasspath(pluginClasspath)
+			.build();
+
+		then:
+		def outcome = result.task(":haxeTabletDebug").getOutcome();
 		assert (outcome == SUCCESS || outcome == UP_TO_DATE);
 	}
 }
