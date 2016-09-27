@@ -1,5 +1,6 @@
 apply plugin: 'codenarc'
 apply plugin: 'groovy'
+apply plugin: "jacoco"
 apply plugin: 'maven-publish'
 
 dependencies
@@ -38,6 +39,29 @@ task createPluginClasspath{
 }
 
 test.dependsOn(['createPluginClasspath'])
+
+// Coverage --------------------------------------------------------------------
+
+jacoco {
+    toolVersion = '0.7.5.201505241946'  // The latest version as of 2015-06-26.
+}
+
+jacocoTestReport {
+	dependsOn tasks.test
+
+	reports {
+		xml.enabled = true
+		html.enabled = true
+		csv.enabled = false
+	}
+}
+
+tasks.test {
+    finalizedBy tasks.jacocoTestReport
+
+    // Add the execution data that Jacoco generates as a task output.
+    outputs.file jacoco.destinationFile
+}
 
 // Publishing ------------------------------------------------------------------
 
