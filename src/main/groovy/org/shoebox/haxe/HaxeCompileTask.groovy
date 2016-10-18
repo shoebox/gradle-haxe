@@ -38,6 +38,8 @@ public class HaxeCompileTask extends SourceTask
 
 	void compile() throws Exception
 	{
+		validate();
+
 		List<String> args = computeArguments();
 		HaxeExecTask task = prepareExec(args);
 		try
@@ -48,6 +50,15 @@ public class HaxeCompileTask extends SourceTask
 		{
 			Logger.error(task.errorOutput.toString());
 			throw e
+		}
+	}
+
+	public void validate()
+	{
+		if (variant.src.size() == 0)	
+		{
+			throw new RuntimeException(
+				"The target '${variant.name}' should have at least one defined 'sourceSet'");
 		}
 	}
 

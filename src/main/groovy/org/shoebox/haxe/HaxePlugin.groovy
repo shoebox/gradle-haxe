@@ -44,16 +44,16 @@ class HaxePluginRuleSource extends RuleSource
 	void validateDefaultConfigSourceSet(@Path("haxe.defaultConfig")
 		HaxeDefaultConfig defaultConfig)
 	{
-		validateSourceSet(defaultConfig.sources);
+		validateSourceSet("defaultConfig", defaultConfig.sources);
 	}
 
 	@Validate
 	void validateFlavorSourceSet(@Each HaxeFlavor flavor)
 	{
-		validateSourceSet(flavor.sources);
+		validateSourceSet(flavor.name, flavor.sources);
 	}
 
-	private void validateSourceSet(FunctionalSourceSet sourceSet)
+	private void validateSourceSet(String name, FunctionalSourceSet sourceSet)
 	{
 		sourceSet.values().each
 		{
@@ -63,7 +63,8 @@ class HaxePluginRuleSource extends RuleSource
 				file ->
 				if (!file.exists())
 				{
-					throw new RuntimeException("Source path : ${file} on flavor:${flavor} is invalid");
+					throw new RuntimeException(
+						"Source path : ${file} on flavor:${name} is invalid");
 				}
 			}
 		}

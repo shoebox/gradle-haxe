@@ -1,4 +1,4 @@
-package org.shoebox;
+package org.shoebox.haxe;
 
 import org.gradle.api.Project;
 import org.gradle.testfixtures.ProjectBuilder;

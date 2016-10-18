@@ -1,4 +1,4 @@
-package org.shoebox;
+package org.shoebox.haxe;
 
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Rule;
@@ -40,6 +40,36 @@ class TestBuildType extends Specification
 			}
 		}
 	""";
+
+	final static String BUILD_FILE_CONTENT_ALT = """
+		plugins {
+            id 'org.shoebox.haxe'
+        }
+
+        import org.shoebox.haxe.HaxePlugin;
+		import org.shoebox.haxe.HaxeFlavor;
+		import org.shoebox.haxe.HaxeSourceSet;
+		import org.shoebox.haxe.HaxeBuildType;
+
+		model {
+			haxe {
+				defaultConfig {
+					main = "Main"
+					platform "js"
+				}
+
+				flavors {
+					mobile(HaxeFlavor) {}
+					tablet(HaxeFlavor) {}
+				}
+
+				buildTypes {
+					
+				}
+			}
+		}
+	""";
+
 	File buildFile;
 	List pluginClasspath;
 

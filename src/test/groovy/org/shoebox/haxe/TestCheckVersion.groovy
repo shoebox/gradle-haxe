@@ -1,4 +1,4 @@
-package org.shoebox;
+package org.shoebox.haxe;
 
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Rule;
