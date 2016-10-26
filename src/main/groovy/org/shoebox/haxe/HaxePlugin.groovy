@@ -64,7 +64,7 @@ class HaxePluginRuleSource extends RuleSource
 				if (!file.exists())
 				{
 					throw new RuntimeException(
-						"Source path : ${file} on flavor:${name} is invalid");
+						"Source path : '${file}' on flavor:${name} is invalid");
 				}
 			}
 		}

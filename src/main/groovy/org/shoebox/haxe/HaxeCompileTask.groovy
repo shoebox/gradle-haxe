@@ -40,7 +40,7 @@ public class HaxeCompileTask extends SourceTask
 	{
 		validate();
 
-		List<String> args = computeArguments();
+		List<String> args = variant.computeArguments(outputDirectory);
 		HaxeExecTask task = prepareExec(args);
 		try
 		{
@@ -60,28 +60,6 @@ public class HaxeCompileTask extends SourceTask
 			throw new RuntimeException(
 				"The target '${variant.name}' should have at least one defined 'sourceSet'");
 		}
-	}
-
-	List<String> computeArguments()
-	{
-		File output = new File(outputDirectory, variant.outputFileName);
-		List<String> args = ["-" + variant.platform, output];
-
-		args.addAll(["-main", variant.main]);
-		variant.src.unique().each { args.addAll(["-cp", it.absolutePath]) };
-		variant.resource.each { args.addAll(["-resource", it]); }
-		variant.macro.each { args.addAll(["--macro", it]); }
-		variant.haxelib.each { args.addAll(["-lib", it]); }
-		variant.flag.each { args.addAll(["-D", it]); }
-		variant.compilerFlag.each { args.push(it); }
-
-		if (variant.debug)
-			args.push("-debug");
-
-		if (variant.verbose)
-			args.push("-v");
-
-		return args;
 	}
 
 	HaxeExecTask prepareExec(final List<String> arguments)

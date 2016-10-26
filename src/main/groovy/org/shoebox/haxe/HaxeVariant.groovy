@@ -2,6 +2,7 @@ package org.shoebox.haxe;
 
 import org.gradle.api.*;
 import org.gradle.model.*;
+import org.gradle.api.file.*;
 
 import java.security.MessageDigest;
 
@@ -93,5 +94,52 @@ public class HaxeVariant implements Cloneable, Serializable
 		}
 
 		return md5(result);
+	}
+
+	public List<String> computeArguments(File outputDirectory)
+	{
+		File output = new File(outputDirectory, outputFileName);
+		List<String> args = ["-" + platform, output];
+
+		args.addAll(["-main", main]);
+		args.addAll(getCpArgs());
+		args.addAll(getResArgs());
+		args.addAll(getMacroArgs());
+		args.addAll(getHaxelibArgs());
+		args.addAll(getFlagArgs());
+		compilerFlag.each { args.push(it); }
+
+		if (debug)
+			args.push("-debug");
+
+		if (verbose)
+			args.push("-v");
+
+		return args;
+	}
+
+	public List<String> getFlagArgs()
+	{
+		return flag.unique().collectMany{["-D", it]};
+	}
+
+	public List<String> getMacroArgs()
+	{
+		return macro.collectMany{["--macro", it]};
+	}
+
+	public List<String> getResArgs()
+	{
+		return resource.unique().collectMany{["-resource", it]};
+	}
+
+	public List<String> getCpArgs()
+	{
+		return src.unique().collectMany{["-cp", it.absolutePath]};
+	}
+
+	public List<String> getHaxelibArgs()
+	{	
+		return haxelib.unique().collectMany{["-lib", it]};
 	}
 }

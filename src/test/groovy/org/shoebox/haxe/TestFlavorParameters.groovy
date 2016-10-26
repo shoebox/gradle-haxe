@@ -91,7 +91,7 @@ class TestFlavorParameters extends Specification
 						{
 							haxe(HaxeSourceSet)
 							{
-								source.srcDir file("${pathRoot}/toto/tata/42")
+								source.srcDir file("/toto/tata/42")
 							}
 						}
 					}
@@ -159,7 +159,7 @@ class TestFlavorParameters extends Specification
 		result.getOutput().contains('The target : testInvalid has no defined main class');
 	}
 
-	def "Flavor without target platform should fail"()
+	def "Flavor with invalid sourcePath define should fail"()
 	{
 		setup:
 			GradleRunner runner = GradleRunner.create()
@@ -178,6 +178,6 @@ class TestFlavorParameters extends Specification
 		where:
 			content					|| result 	|| msg
 			CaseValidSourceSet 		|| true   	|| null
-			CaseInvalidSourceSet 	|| false   	|| "/toto/tata/42 on flavor:test is invalid"
+			CaseInvalidSourceSet 	|| false   	|| "Source path : '/toto/tata/42' on flavor:test is invalid"
 	}
 }
