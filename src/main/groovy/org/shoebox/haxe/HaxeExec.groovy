@@ -1,29 +1,21 @@
-package org.shoebox.haxe;
+package org.shoebox.haxe
 
-import org.gradle.process.internal.ExecHandleBuilder;
-import org.gradle.process.internal.ExecHandle;
-import org.gradle.process.ExecResult;
-import org.gradle.process.internal.ExecHandleListener;
+import org.gradle.api.Project
+import org.gradle.process.ExecSpec
 
-import java.io.ByteArrayOutputStream;
+class HaxeExec {
+    public static run(Project project, List<Object> arguments) {
+        run(project, arguments, null);
+    }
 
-class HaxeExec extends ExecHandleBuilder
-{
-	public HaxeExec()
-	{
-		super();
-		executable = "haxe";
-		setWorkingDir(new File(".").getAbsolutePath());
-		errorOutput = new ByteArrayOutputStream();
-	}
+    public static run(Project project, List<Object> arguments, OutputStream errorStream) {
+        project.exec({ ExecSpec spec ->
+            spec.setExecutable("haxe")
+            spec.args(arguments)
+            spec.setIgnoreExitValue(true)
 
-	public void setArguments(List<String> args)
-	{
-		this.args = args;
-	}
-
-	public List<String> getAllArguments()
-	{
-		return args;
-	}
+            if (errorStream)
+                spec.setErrorOutput(errorStream)
+        });
+    }
 }
