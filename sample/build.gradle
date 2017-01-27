@@ -9,7 +9,7 @@ buildscript
 	}
 	dependencies
 	{
-		classpath group: 'org.shoebox', name: 'gradle-haxe', version: '0.2.0'
+		classpath group: 'org.shoebox', name: 'gradle-haxe', version: '0.3.0'
 	}
 }
 
