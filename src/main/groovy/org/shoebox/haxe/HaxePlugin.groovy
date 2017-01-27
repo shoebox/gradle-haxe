@@ -227,7 +227,6 @@ class HaxePluginRuleSource extends RuleSource
 				public void execute(HaxeCheckVersion t)
 				{
 					t.requiredVersion = model.version;
-					t.outputDir = t.project.file(".haxe/");
 				}
 			}
 		);
