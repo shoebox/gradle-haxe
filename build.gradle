@@ -1,39 +1,37 @@
+apply from: "gradle/strict_compile.gradle"
+
 apply plugin: 'groovy'
 apply plugin: 'maven-publish'
 
-dependencies
-{
-	compile gradleApi()
-	compile localGroovy()
-	testCompile 'junit:junit:4+'
-	testCompile 'org.codehaus.groovy:groovy-all:2.4.4'
-	testCompile 'org.hamcrest:hamcrest-all:1.3'
-	testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
-	testCompile gradleTestKit()
-
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    testCompile 'junit:junit:4+'
+    testCompile 'org.codehaus.groovy:groovy-all:2.4.4'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile 'org.spockframework:spock-core:1.0-groovy-2.4'
+    testCompile gradleTestKit()
 }
 
 group = 'org.shoebox'
 version = '0.2.0'
 
-tasks.create(name: 'compileJar', type: Copy, dependsOn:'jar') 
-{
-	from(file('build/libs/'))
-	into(".")
-	include('**/*.jar')
+tasks.create(name: 'compileJar', type: Copy, dependsOn: 'jar') {
+    from(file('build/libs/'))
+    into(".")
+    include('**/*.jar')
 }
 
-task createPluginClasspath{
-	def outputDir = file("${buildDir}/resources/test")
+task createPluginClasspath {
+    def outputDir = file("${buildDir}/resources/test")
 
-	inputs.files sourceSets.test.runtimeClasspath
-	outputs.dir outputDir
+    inputs.files sourceSets.test.runtimeClasspath
+    outputs.dir outputDir
 
-	doLast
-	{
-		outputDir.mkdirs()
-		file("${outputDir}/plugin-classpath.txt").text = sourceSets.test.runtimeClasspath.join('\n',)
-	}
+    doLast {
+        outputDir.mkdirs()
+        file("${outputDir}/plugin-classpath.txt").text = sourceSets.test.runtimeClasspath.join('\n',)
+    }
 }
 
 test.dependsOn(['createPluginClasspath'])
@@ -41,46 +39,37 @@ test.dependsOn(['createPluginClasspath'])
 // Publishing ------------------------------------------------------------------
 
 apply plugin: "com.gradle.plugin-publish"
-buildscript
-{
-	repositories
-	{
-		maven
-		{
-			url "https://plugins.gradle.org/m2/"
-		}
-	}
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
 
-	dependencies
-	{
-		classpath "com.gradle.publish:plugin-publish-plugin:0.9.5"
-	}
+    dependencies {
+        classpath "com.gradle.publish:plugin-publish-plugin:0.9.5"
+    }
 }
 
-repositories
-{
-	mavenCentral()
+repositories {
+    mavenCentral()
 
-	maven
-	{
-		url "https://plugins.gradle.org/m2/"
-	}
+    maven {
+        url "https://plugins.gradle.org/m2/"
+    }
 }
 
 
-pluginBundle
-{
-	website = 'https://github.com/shoebox/gradle-haxe'
-	vcsUrl = 'https://github.com/shoebox/gradle-haxe'
-	description = 'Haxe compiler wrapper in Gradle'
-	tags = ['haxe']
+pluginBundle {
+    website = 'https://github.com/shoebox/gradle-haxe'
+    vcsUrl = 'https://github.com/shoebox/gradle-haxe'
+    description = 'Haxe compiler wrapper in Gradle'
+    tags = ['haxe']
 
-	plugins
-	{
-		greetingsPlugin
-		{
-			id = 'org.shoebox.haxe'
-			displayName = 'Gradle haxe compiler'
-		}
-	}
+    plugins {
+        greetingsPlugin {
+            id = 'org.shoebox.haxe'
+            displayName = 'Gradle haxe compiler'
+        }
+    }
 }

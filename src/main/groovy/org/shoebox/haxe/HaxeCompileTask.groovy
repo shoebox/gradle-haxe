@@ -1,72 +1,61 @@
-package org.shoebox.haxe;
+package org.shoebox.haxe
 
-import org.haxe.gradle.flavor.*;
-import org.gradle.api.*;
-import org.gradle.api.file.*;
-import org.gradle.api.tasks.*;
-import org.shoebox.haxe.HaxePlugin;
-import org.shoebox.haxe.HaxeResourceTask;
-import org.gradle.api.tasks.ParallelizableTask;
+import org.gradle.api.tasks.*
+import org.haxe.gradle.flavor.*
 
 @ParallelizableTask
-public class HaxeCompileTask extends SourceTask
-{
-	@Optional
-	@OutputFile
-	File output;
+public class HaxeCompileTask extends SourceTask {
+    @Optional
+    @OutputFile
+    File output;
 
-	@Optional
-	@OutputDirectory
-	File outputDirectory;
+    @Optional
+    @OutputDirectory
+    File outputDirectory;
 
-	@Input
-	String configurationHash;
+    @Input
+    String configurationHash;
 
-	HaxeVariant variant;
-	
-	public HaxeCompileTask()
-	{
-		super();
-		this.include("**/*.hx");
-	}
+    HaxeVariant variant;
 
-	@TaskAction
-	public void run()
-	{	
-		compile();
-	}
+    public HaxeCompileTask() {
+        super();
+        this.include("**/*.hx");
+    }
 
-	void compile()
-	{
-		HaxeExec task = prepareExec();
-		task.redirectErrorStream()
-			.build()
-			.start()
-			.waitForFinish()
-			.assertNormalExitValue();
-	}
+    @TaskAction
+    public void run() {
+        compile();
+    }
 
-	HaxeExec prepareExec()
-	{
-		File output = new File(outputDirectory, variant.outputFileName);
-		List<String> args = ["-" + variant.platform, output];
+    void compile() {
+        OutputStream errorStream = new ByteArrayOutputStream()
+        List<String> args = prepareExec()
+        HaxeExec.run(getProject(), args, errorStream)
 
-		args.addAll(["-main", variant.main]);
-		variant.src.unique().each{ args.addAll(["-cp", it.absolutePath]) };
-		variant.resource.each{ args.addAll(["-resource", it]); }
-		variant.macro.each{ args.addAll(["--macro", it]); }
-		variant.haxelib.each{ args.addAll(["-lib", it]); }
-		variant.flag.each{ args.addAll(["-D", it]); }
-		variant.compilerFlag.each{ args.push(it); }
+        if (errorStream.size() > 0) {
+            throw new Error("Compilation Error : " + errorStream.toString());
+        }
+    }
 
-		if (variant.debug)
-			args.push("-debug");
-		
-		if (variant.verbose)
-			args.push("-v");
+    List<String> prepareExec() {
+        File output = new File(outputDirectory, variant.outputFileName)
+        List<String> args = ["-" + variant.platform, output]
 
-		HaxeExec exec = new HaxeExec();
-		exec.arguments = args;
-		return exec;
-	}
+        args.addAll(["-main", variant.main])
+        variant.src.unique().each { args.addAll(["-cp", it.absolutePath]) }
+        variant.resource.each { args.addAll(["-resource", it]) }
+        variant.macro.each { args.addAll(["--macro", it]) }
+        variant.haxelib.each { args.addAll(["-lib", it]) }
+        variant.flag.each { args.addAll(["-D", it]) }
+        variant.compilerFlag.each { args.push(it) }
+
+        if (variant.debug)
+            args.push("-debug")
+
+        if (variant.verbose)
+            args.push("-v")
+
+        return args
+    }
 }

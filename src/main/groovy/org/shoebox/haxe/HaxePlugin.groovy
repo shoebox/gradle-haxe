@@ -1,22 +1,18 @@
-package org.shoebox.haxe;
+package org.shoebox.haxe
 
-import org.gradle.api.*;
-import org.gradle.api.task.*;
-import org.gradle.language.base.*;
-import org.gradle.model.*;
-import org.shoebox.haxe.HaxeResourceTask;
-import org.gradle.model.internal.core.UnmanagedStruct;
-import org.apache.log4j.LogManager;
-import java.math.BigInteger;
-import java.security.MessageDigest
-import org.codehaus.groovy.util.HashCodeHelper;
-import groovy.json.*;
+import org.gradle.api.*
+import org.gradle.api.task.*
+import org.gradle.language.base.FunctionalSourceSet
+import org.gradle.language.base.LanguageSourceSet
+import org.gradle.model.*
 
 class HaxePlugin implements Plugin<Project>
 {
 	@Override
 	public void apply(Project project)
 	{
+		Logger.setup(project);
+		project.tasks.create("Haxe compile")
 		project.plugins.apply(org.gradle.language.base.plugins.LanguageBasePlugin);
 		project.plugins.apply(HaxePluginRuleSource);
 	}	
