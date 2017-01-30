@@ -13,6 +13,7 @@ class HaxeExec {
             spec.setExecutable("haxe")
             spec.args(arguments)
             spec.setIgnoreExitValue(true)
+            spec.workingDir(project.getRootProject().getProjectDir())
 
             if (errorStream)
                 spec.setErrorOutput(errorStream)
