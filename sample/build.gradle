@@ -4,20 +4,20 @@ buildscript
 	{
 		flatDir
 		{
-			dirs '../'
+			dirs '../build/libs'
 		}
 	}
 	dependencies
 	{
-		classpath group: 'org.shoebox', name: 'gradle-haxe', version: '0.2.1'
+		classpath group: 'org.shoebox', name: 'gradle-haxe', version: '0.3.0'
 	}
 }
 
 
-import org.shoebox.haxe.HaxePlugin;
-import org.shoebox.haxe.HaxeFlavor;
-import org.shoebox.haxe.HaxeSourceSet;
-import org.shoebox.haxe.HaxeBuildType;
+
+import org.shoebox.haxe.HaxeBuildType
+import org.shoebox.haxe.HaxeFlavor
+import org.shoebox.haxe.HaxeSourceSet
 
 apply plugin: 'org.shoebox.haxe'
 
@@ -51,7 +51,7 @@ model
 
 			platform "js"
 		}
-		
+
 		flavors
 		{
 			test(HaxeFlavor)
@@ -89,7 +89,7 @@ model
 				group = "Tablet"
 			}
 		}
-		
+
 		buildTypes
 		{
 			debug(HaxeBuildType)
