@@ -19,7 +19,7 @@ public class HaxeCheckVersion extends DefaultTask {
     @TaskAction
     public void run() {
         Logger.info("Checking required haxe version")
-        String version = null
+        String version
         try {
             version = getLocalVersion()
         } catch (Exception exception) {

@@ -11,16 +11,19 @@ public class HaxeCompileTask extends SourceTask {
 
     @Optional
     @OutputDirectory
-    File outputDirectory;
+    File outputDirectory
 
     @Input
-    String configurationHash;
+    String configurationHash
 
-    HaxeVariant variant;
+    HaxeVariant variant
 
     public HaxeCompileTask() {
         super();
-        this.include("**/*.hx");
+        this.include("**/*.hx")
+
+        // Cf https://github.com/gradle/gradle/pull/668
+        outputs.upToDateWhen { false }
     }
 
     @TaskAction
@@ -34,7 +37,7 @@ public class HaxeCompileTask extends SourceTask {
         HaxeExec.run(getProject(), args, errorStream)
 
         if (errorStream.size() > 0) {
-            throw new Error("Compilation Error : " + errorStream.toString());
+            throw new Error("Compilation Error : " + errorStream.toString())
         }
     }
 
