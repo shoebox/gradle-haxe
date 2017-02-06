@@ -51,7 +51,7 @@ model
 
 			platform "js"
 		}
-		
+
 		flavors
 		{
 			test(HaxeFlavor)
@@ -87,7 +87,7 @@ model
 				group = "Tablet"
 			}
 		}
-		
+
 		buildTypes
 		{
 			debug(HaxeBuildType)
