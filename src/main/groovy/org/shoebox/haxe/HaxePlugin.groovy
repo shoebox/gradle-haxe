@@ -78,13 +78,11 @@ class HaxePluginRuleSource extends RuleSource {
     private HaxeVariant createVariantFromCombo(HaxeDefaultConfig defaultConfig,
                                                ArrayList combo) {
         HaxeVariant variant = new HaxeVariant(defaultConfig);
-        combo.each
-                {
-                    flavor ->
-                        Util.copyDefault(flavor, variant);
-                        mergeSourceSet(flavor, variant);
-                        mergeSourceSet(defaultConfig, variant);
-                }
+        combo.each { flavor ->
+            Util.copyDefault(flavor, variant);
+            mergeSourceSet(flavor, variant);
+            mergeSourceSet(defaultConfig, variant);
+        }
 
         return variant;
     }
@@ -111,8 +109,7 @@ class HaxePluginRuleSource extends RuleSource {
                 String btVariantName = variant.getCompileTaskName(bt);
                 btContainerDependencies.push(btVariantName);
 
-                tasks.create(btVariantName,
-                        HaxeCompileTask.class,
+                tasks.create(btVariantName, HaxeCompileTask.class,
                         new Action<HaxeCompileTask>() {
                             @Override
                             public void execute(HaxeCompileTask t) {
@@ -163,32 +160,29 @@ class HaxePluginRuleSource extends RuleSource {
     private void createResourceTask(final ModelMap<Task> tasks,
                                     final HaxeVariant variant,
                                     final File resDirectory,
-                                    ModelMap<HaxeBuildType> buildTypes) {
-        buildTypes.each {
-            bt ->
-                tasks.create(variant.getResourceTaskName(bt),
-                        HaxeResourceTask.class,
-                        new Action<HaxeResourceTask>() {
-                            @Override
-                            public void execute(HaxeResourceTask t) {
-                                t.components = variant.components;
-                                t.configurationHash = variant.hash();
-                                t.outputDirectory = variant.getOutputPath(t.project.buildDir);
-                                t.resDirectory = resDirectory;
-                                t.variant = variant;
-                            }
+                                    final ModelMap<HaxeBuildType> buildTypes) {
+        buildTypes.each { bt ->
+            tasks.create(variant.getResourceTaskName(bt),
+                    HaxeResourceTask.class,
+                    new Action<HaxeResourceTask>() {
+                        @Override
+                        public void execute(HaxeResourceTask t) {
+                            t.components = variant.components;
+                            t.configurationHash = variant.hash();
+                            t.outputDirectory = variant.getOutputPath(t.project.buildDir, bt.debug);
+                            t.resDirectory = resDirectory;
+                            t.variant = variant;
                         }
-                );
+                    }
+            );
         };
     }
 
     @Mutate
-    void createCheckVersionTask(final ModelMap<Task> tasks,
-                                final HaxeModel model) {
+    void createCheckVersionTask(final ModelMap<Task> tasks, final HaxeModel model) {
         HaxeCheckVersion checkVersion = tasks.create(CheckVersionTaskName,
                 HaxeCheckVersion.class,
-                new Action<HaxeCheckVersion>()
-                {
+                new Action<HaxeCheckVersion>() {
                     @Override
                     public void execute(HaxeCheckVersion t) {
                         t.requiredVersion = model.version;
@@ -205,34 +199,31 @@ class HaxePluginRuleSource extends RuleSource {
                             final @Path("haxe.buildTypes") ModelMap<HaxeBuildType> buildTypes) {
         if (dimensions != null) {
             List<HaxeFlavor[]> groups = [];
-            dimensions.each {
-                dim ->
-                    HaxeFlavor[] list = model.flavors.findAll { it.dimension == dim };
-                    if (list.size() != 0) {
-                        groups.push(list);
-                    }
+            dimensions.each { dim ->
+                HaxeFlavor[] list = model.flavors.findAll { it.dimension == dim };
+                if (list.size() != 0) {
+                    groups.push(list);
+                }
             }
 
-            GroovyCollections.combinations(groups).each {
-                combo ->
-                    final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
-                    variant.name = combo.collect { it.name.capitalize() }.join();
-                    variant.components = combo.collect { it.name };
-                    validateVariant(variant);
+            GroovyCollections.combinations(groups).each { combo ->
+                final HaxeVariant variant = createVariantFromCombo(defaultConfig, combo);
+                variant.name = combo.collect { it.name.capitalize() }.join();
+                variant.components = combo.collect { it.name };
+                validateVariant(variant);
 
-                    createCompileTask(variant, tasks, buildTypes);
-                    createResourceTask(tasks, variant, model.res, buildTypes);
+                createCompileTask(variant, tasks, buildTypes);
+                createResourceTask(tasks, variant, model.res, buildTypes);
             }
         } else {
-            model.flavors.each {
-                it ->
-                    HaxeVariant variant = createVariantFromFlavor(defaultConfig, it);
-                    variant.name = it.name;
-                    variant.components = [it.name];
-                    validateVariant(variant);
+            model.flavors.each { it ->
+                HaxeVariant variant = createVariantFromFlavor(defaultConfig, it);
+                variant.name = it.name;
+                variant.components = [it.name];
+                validateVariant(variant);
 
-                    createCompileTask(variant, tasks, buildTypes);
-                    createResourceTask(tasks, variant, model.res, buildTypes);
+                createCompileTask(variant, tasks, buildTypes);
+                createResourceTask(tasks, variant, model.res, buildTypes);
             }
         }
     }
